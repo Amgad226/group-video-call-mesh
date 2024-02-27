@@ -1,5 +1,4 @@
 stages:
-  - test
   - build_backend
   - build_frontend
 
@@ -7,11 +6,6 @@ variables:
   DOCKER_HUB_REPO: "amgad226"
   BACKEND_IMAGE_NAME: "mesh-b"
   FRONTEND_IMAGE_NAME: "mesh-f"
-
-test:
-  stage: test
-  script:
-    - echo "hello"
 
 build_backend:
   stage: build_backend
@@ -24,7 +18,7 @@ build_backend:
     - docker push $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME
 
 build_frontend:
-  stage: build_backend
+  stage: build_frontend
   image: docker:19.03.12
   services:
     - docker:19.03.12-dind
