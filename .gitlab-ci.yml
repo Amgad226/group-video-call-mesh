@@ -1,6 +1,7 @@
 stages:
   - test
   - build_backend
+  - build_frontend
 
 variables:
   DOCKER_HUB_REPO: "amgad226"
@@ -18,6 +19,17 @@ build_backend:
   services:
     - docker:19.03.12-dind
   script:
+    - docker build -t $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - docker push $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME
+
+build_backend:
+  stage: build_backend
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
+  script:
+    - cd client
     - docker build -t $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME .
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
     - docker push $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME
