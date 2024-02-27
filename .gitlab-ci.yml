@@ -24,6 +24,6 @@ build_frontend:
     - docker:19.03.12-dind
   script:
     - cd client
-    - docker build -t $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME .
+    - docker build -t $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME .
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-    - docker push $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME
+    - docker push $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME
