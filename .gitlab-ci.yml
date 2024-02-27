@@ -10,34 +10,6 @@ variables:
   FRONTEND_IMAGE_NAME: "mesh-f"
 
 test:
+  stage: test
   script:
     - ls
-
-build_backend:
-  stage: build_backend
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
-  script:
-    - cd /path/to/your/backend
-    - docker build -t $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME .
-    # - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
-    # - docker push $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME
-
-build_frontend:
-  stage: build_frontend
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
-  script:
-    - cd /path/to/your/frontend
-    - docker build -t $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME .
-    # - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
-    # - docker push $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME
-
-push_to_docker_hub:
-  stage: push_to_docker_hub
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-    - docker push $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME
-    - docker push $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME
