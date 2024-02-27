@@ -14,11 +14,8 @@ const Container = styled.div`
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    // background-color: #282828;
-    background-image: ${backgroundImageUrl}; // Set the background image
-    background-size: cover; // Cover the entire container with the background image
-    background-position: center; // Center the background image
-    /* You can also add additional background properties like background-repeat, background-attachment, etc. */
+    background-color: #282828;
+
 `;
 const generateRandomColor = () => {
     return '#' + Math.floor(Math.random() * 16777215).toString(16);
