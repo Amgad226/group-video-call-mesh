@@ -38,7 +38,7 @@ const CreateRoom = (props) => {
 
     return (
         <Container>
-            <StyledButton onClick={create}>X Create room X W XXY</StyledButton>
+            <StyledButton onClick={create}>Create room</StyledButton>
         </Container>
     );
 };
