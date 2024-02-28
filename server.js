@@ -22,7 +22,7 @@ io.on('connection', socket => {
             // if (length === 4) {
             //     socket.emit("room full");
             //     return;
-            // }
+            // } 
             users[roomID].push(socket.id);
         } else {
             users[roomID] = [socket.id];
