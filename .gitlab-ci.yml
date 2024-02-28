@@ -1,6 +1,6 @@
 stages:
   - build_backend
-  # - build_frontend
+  - build_frontend
 # 
 variables:
   DOCKER_HUB_REPO: "amgad226"
@@ -20,14 +20,14 @@ build_backend:
     # - curl -X POST "$API_ENDPOINT?image=mesh-b&token=TE*%3C@YRD@!j%3EsaAsdjfaY%3E"
 
 
-# build_frontend:
-#   stage: build_frontend
-#   image: docker:19.03.12
-#   services:
-#     - docker:19.03.12-dind
-#   script:
-#     - cd client
-#     - docker build -t $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME .
-#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-#     - docker push $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME
-#     # - curl -X POST "$API_ENDPOINT?image=mesh-t&token=TE*%3C@YRD@!j%3EsaAsdjfaY%3E"
+build_frontend:
+  stage: build_frontend
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
+  script:
+    - cd client
+    - docker build -t $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - docker push $DOCKER_HUB_REPO/$FRONTEND_IMAGE_NAME
+    # - curl -X POST "$API_ENDPOINT?image=mesh-t&token=TE*%3C@YRD@!j%3EsaAsdjfaY%3E"
