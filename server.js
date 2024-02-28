@@ -10,7 +10,7 @@ const users = {};
 const socketToRoom = {};
 app.get('/', (req, res) => {
     return res.json({
-        message: "mesh server code"
+        message: "X mesh server code X"
     });
 }
 );
