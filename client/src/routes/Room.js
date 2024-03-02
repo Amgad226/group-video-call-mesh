@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
+// import Peer from "peerjs";
 import Peer from "simple-peer";
 import styled from "styled-components";
 import { useParams } from "react-router-dom";
@@ -61,7 +62,7 @@ const Room = (props) => {
 
     useEffect(() => {
 
-        socketRef.current = io.connect("https://yorkbritishacademy.net/");
+        socketRef.current = io.connect("http://localhost:3001");
         navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: true }).then(stream => {
             userVideo.current.srcObject = stream;
             socketRef.current.emit("join room", roomID);
@@ -103,17 +104,41 @@ const Room = (props) => {
             stream,
             config: {
                 iceServers: [
+                    // {
+                    //     urls: "stun:stun.stunprotocol.org"
+                    // },
+                    // {
+                    //     urls: 'turn:numb.viagenie.ca',
+                    //     credential: 'muazkh',
+                    //     username: 'webrtc@live.com'
+                    // },
                     {
-                        urls: "stun:stun.stunprotocol.org"
+                        urls: "stun:stun.relay.metered.ca:80",
                     },
                     {
-                        urls: 'turn:numb.viagenie.ca',
-                        credential: 'muazkh',
-                        username: 'webrtc@live.com'
+                        urls: "turn:standard.relay.metered.ca:80",
+                        username: "86721531a8351f5134873628",
+                        credential: "glTfzJOpzAiRVSBE",
                     },
-                ]
-            }
-        });
+                    {
+                        urls: "turn:standard.relay.metered.ca:80?transport=tcp",
+                        username: "86721531a8351f5134873628",
+                        credential: "glTfzJOpzAiRVSBE",
+                    },
+                    {
+                        urls: "turn:standard.relay.metered.ca:443",
+                        username: "86721531a8351f5134873628",
+                        credential: "glTfzJOpzAiRVSBE",
+                    },
+                    {
+                        urls: "turns:standard.relay.metered.ca:443?transport=tcp",
+                        username: "86721531a8351f5134873628",
+                        credential: "glTfzJOpzAiRVSBE",
+                    },
+
+
+                ]}
+            });
         console.log(peer);
 
         peer.on("signal", signal => {
