@@ -105,14 +105,14 @@ const Room = (props) => {
             stream,
             config: {
                 iceServers: [
-                    // {
-                    //     urls: "stun:stun.stunprotocol.org"
-                    // },
-                    // {
-                    //     urls: 'turn:numb.viagenie.ca',
-                    //     credential: 'muazkh',
-                    //     username: 'webrtc@live.com'
-                    // },
+                    {
+                        urls: "stun:stun.stunprotocol.org"
+                    },
+                    {
+                        urls: 'turn:numb.viagenie.ca',
+                        credential: 'muazkh',
+                        username: 'webrtc@live.com'
+                    },
                     {
                         urls: "stun:stun.relay.metered.ca:80",
                     },
@@ -138,8 +138,9 @@ const Room = (props) => {
                     },
 
 
-                ]}
-            });
+                ]
+            }
+        });
         console.log(peer);
 
         peer.on("signal", signal => {
@@ -148,6 +149,52 @@ const Room = (props) => {
 
         return peer;
     }
+
+
+    //you can specify a STUN server here
+
+    const iceConfiguration = {}
+    iceConfiguration.iceServers = [
+        {
+            urls: "stun:stun.relay.metered.ca:80",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:80",
+            username: "86721531a8351f5134873628",
+            credential: "glTfzJOpzAiRVSBE",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:80?transport=tcp",
+            username: "86721531a8351f5134873628",
+            credential: "glTfzJOpzAiRVSBE",
+        },
+        {
+            urls: "turn:standard.relay.metered.ca:443",
+            username: "86721531a8351f5134873628",
+            credential: "glTfzJOpzAiRVSBE",
+        },
+        {
+            urls: "turns:standard.relay.metered.ca:443?transport=tcp",
+            username: "86721531a8351f5134873628",
+            credential: "glTfzJOpzAiRVSBE",
+        },
+
+
+    ]
+
+    const localConnection = new RTCPeerConnection(iceConfiguration)
+
+    localConnection.onicecandidate = e => {
+        console.log(" NEW ice candidate!! on localconnection reprinting SDP ")
+        console.log(JSON.stringify(localConnection.localDescription))
+    }
+    const sendChannel = localConnection.createDataChannel("sendChannel");
+    sendChannel.onmessage = e => console.log("messsage received!!!" + e.data)
+    sendChannel.onopen = e => console.log("open!!!!");
+    sendChannel.onclose = e => console.log("closed!!!!!!");
+
+
+    localConnection.createOffer().then(o => localConnection.setLocalDescription(o))
 
     function addPeer(incomingSignal, callerID, stream) {
         const peer = new Peer({
