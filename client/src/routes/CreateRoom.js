@@ -32,6 +32,7 @@ const StyledButton = styled.button`
 const CreateRoom = (props) => {
     // Function to create a room
     function create() {
+        alert('ci done ')
         const id = uuid();
         props.history.push(`/room/${id}`);
     }
