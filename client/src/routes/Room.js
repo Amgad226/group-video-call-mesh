@@ -154,6 +154,8 @@ const Room = (props) => {
     //you can specify a STUN server here
 
     const iceConfiguration = {}
+    iceConfiguration.sdpSemantics="unified-plan"
+    iceConfiguration.iceTransportPolicy="all"
     iceConfiguration.iceServers = [
         {
             urls: "stun:stun.relay.metered.ca:80",
@@ -177,9 +179,7 @@ const Room = (props) => {
             urls: "turns:standard.relay.metered.ca:443?transport=tcp",
             username: "86721531a8351f5134873628",
             credential: "glTfzJOpzAiRVSBE",
-        },
-
-
+        }
     ]
 
     const localConnection = new RTCPeerConnection(iceConfiguration)
