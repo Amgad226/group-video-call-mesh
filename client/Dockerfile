@@ -4,6 +4,9 @@ FROM node:20.11.1-alpine3.19
 # Set working directory
 WORKDIR /app
 
+# Install required system libraries
+RUN apk add --no-cache libc6-compat
+
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
