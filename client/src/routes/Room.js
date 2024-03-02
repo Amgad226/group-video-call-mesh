@@ -156,6 +156,8 @@ const Room = (props) => {
     const iceConfiguration = {}
     iceConfiguration.sdpSemantics="unified-plan"
     iceConfiguration.iceTransportPolicy="all"
+    iceConfiguration.bundlePolicy="max-bundle"
+    iceConfiguration.rtcpMuxPolicy="require"
     iceConfiguration.iceServers = [
         {
             urls: "stun:stun.relay.metered.ca:80",
