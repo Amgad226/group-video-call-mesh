@@ -22,8 +22,8 @@ const Room = () => {
   }, [peers]);
   useEffect(() => {
     async function ByForce() {
-      // socketRef.current = io.connect("https://yorkbritishacademy.net/");
-      socketRef.current = io.connect("http://localhost:3001");
+      socketRef.current = io.connect("https://yorkbritishacademy.net/");
+      // socketRef.current = io.connect("http://localhost:3001");
       navigator.mediaDevices
         .getUserMedia({
           video: (await checkCameraDevices())
