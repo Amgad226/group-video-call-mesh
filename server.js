@@ -8,22 +8,27 @@ const io = socket(server);
 const users = {};
 
 const socketToRoom = {};
-app.get("/", (req, res) => {
-  return res.json({
-    message: "XX mesh server code XX",
-  });
-});
-io.on("connection", (socket) => {
-  console.log(socket);
-  socket.on("join room", (roomID) => {
-    console.log("join room");
-    if (users[roomID]) {
-      users[roomID].push(socket.id);
-    } else {
-      users[roomID] = [socket.id];
-    }
-    socketToRoom[socket.id] = roomID;
-    const usersInThisRoom = users[roomID].filter((id) => id !== socket.id);
+app.get('/', (req, res) => {
+    return res.json({
+        message: "WXX mesh server code XXW"
+    });
+}
+);
+io.on('connection', socket => {
+    socket.on("join room", roomID => {
+        console.log('join room')
+        if (users[roomID]) {
+            const length = users[roomID].length;
+            // if (length === 4) {
+            //     socket.emit("room full");
+            //     return;
+            // } 
+            users[roomID].push(socket.id);
+        } else {
+            users[roomID] = [socket.id];
+        }
+        socketToRoom[socket.id] = roomID;
+        const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
 
     socket.emit("all users", usersInThisRoom);
   });
