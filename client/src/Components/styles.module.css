@@ -1,0 +1,53 @@
+.videoFrame {
+  position: relative;
+  width: 400px;
+  height: 300px;
+  background-color: seagreen;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+}
+.video {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  object-fit: cover;
+  z-index: 0;
+  background-color: black;
+}
+.acitons {
+  width: 100%;
+  height: auto;
+  margin-top: auto;
+  margin-bottom: 30px;
+  position: relative;
+  display: flex;
+  justify-content: space-evenly;
+  padding-inline: 20px;
+}
+.icon {
+  position: relative;
+  color: white;
+  font-size: 40px;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.icon:hover {
+  opacity: 1;
+}
+.icon.danger {
+  opacity: 1;
+  color: red;
+}
+.icon.active {
+  opacity: 1;
+  color: seagreen;
+}
+.alt {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+}
