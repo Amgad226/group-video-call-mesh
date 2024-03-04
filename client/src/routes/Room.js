@@ -9,7 +9,7 @@ import { iceConfig } from "../config/iceConfig";
 import { checkCameraDevices } from "../helpers/checkCameraDevice";
 import { checkAudioDevices } from "../helpers/checkAudioDevices";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import { Button } from "antd";
+import { Button, Modal } from "antd";
 
 const Room = () => {
   const history = useHistory();
@@ -19,90 +19,94 @@ const Room = () => {
   const peersRef = useRef([]);
   const { roomID } = useParams();
   const clientStreamRef = useRef();
+  const [ayhamStram, setAyhamStream] = useState();
+  const [permissionDenied, setPermissionDenied] = useState();
 
-  useEffect(() => {
-    async function ByForce() {
-      // socketRef.current = io.connect("https://yorkbritishacademy.net/");
+  async function ByForce() {
+    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
 
-      socketRef.current = io.connect("http://localhost:3001");
-      navigator.mediaDevices
-        .getUserMedia({
-          video: (await checkCameraDevices())
-            ? {
-                height: window.innerHeight / 2,
-                width: window.innerWidth / 2,
-              }
-            : false,
-          audio: await checkAudioDevices(),
-        })
-        .then((stream) => {
-          clientStreamRef.current = stream;
-          userVideo.current.srcObject = clientStreamRef.current;
-          socketRef.current.emit("join room", roomID);
-          socketRef.current.on("all users", (users) => {
-            const peers = [];
-            // create peer connection for each user for me
-            console.log(clientStreamRef.current);
-            users.forEach((userID) => {
-              //user id is the old socket_id already in room
-              const peer = createPeer(
-                userID, // the old user socket id
-                socketRef.current.id, // new user socket id
-                clientStreamRef.current // stream for new user
-              );
-              // the peer is the peer of the new user
-
-              peersRef.current.push({
-                peerID: userID,
-                peer,
-              });
-              peers.push(peer);
-            });
-            setPeers(peers);
-          });
-          socketRef.current.on("user joined", (payload) => {
-            // payload
-            // signal: payload.signal, //new user SDP
-            // callerID: payload.callerID, // new_user_socket_id
-
-            console.log(payload); // {SDP for new user,new_user_socket_id}
-            console.log(clientStreamRef.current);
-
-            const peer = addPeer(
-              payload.signal, //SPD for new user
-              payload.callerID, // socket id (new user for room)
+    socketRef.current = io.connect("http://localhost:3001");
+    navigator.mediaDevices
+      .getUserMedia({
+        video: (await checkCameraDevices())
+          ? {
+              height: window.innerHeight / 2,
+              width: window.innerWidth / 2,
+            }
+          : false,
+        audio: await checkAudioDevices(),
+      })
+      .then((stream) => {
+        setPermissionDenied(false);
+        setAyhamStream(stream);
+        clientStreamRef.current = stream;
+        userVideo.current.srcObject = clientStreamRef.current;
+        socketRef.current.emit("join room", roomID);
+        socketRef.current.on("all users", (users) => {
+          const peers = [];
+          // create peer connection for each user for me
+          console.log(clientStreamRef.current);
+          users.forEach((userID) => {
+            //user id is the old socket_id already in room
+            const peer = createPeer(
+              userID, // the old user socket id
+              socketRef.current.id, // new user socket id
               clientStreamRef.current // stream for new user
             );
+            // the peer is the peer of the new user
+
             peersRef.current.push({
-              peerID: payload.callerID,
+              peerID: userID,
               peer,
             });
-            setPeers((users) => [...users, peer]);
+            peers.push(peer);
           });
-          socketRef.current.on("user-leave", (e) => {
-            const removedPeer = peersRef.current.filter(
-              (peer) => peer.peerID === e
-            );
-            const newPeers = peersRef.current.filter(
-              (peer) => peer.peerID !== e
-            );
-            console.log("user leave");
-            console.log(e);
-            console.log("removedPeer", removedPeer);
-            console.log("newPeers", newPeers);
-            // setPeers(newPeers.map((peer) => peer.peer));
-            peersRef.current = newPeers;
-            setPeers(peersRef.current.map((peer) => peer.peer));
-          });
+          setPeers(peers);
+        });
+        socketRef.current.on("user joined", (payload) => {
+          // payload
+          // signal: payload.signal, //new user SDP
+          // callerID: payload.callerID, // new_user_socket_id
 
-          socketRef.current.on("receiving returned signal", (payload) => {
-            const item = peersRef.current.find((p) => p.peerID === payload.id);
-            item.peer.signal(payload.signal);
-            // NOTE :here must remove the old peer form peers array and may in peerRef and may add the new peer
+          console.log(payload); // {SDP for new user,new_user_socket_id}
+          console.log(clientStreamRef.current);
+
+          const peer = addPeer(
+            payload.signal, //SPD for new user
+            payload.callerID, // socket id (new user for room)
+            clientStreamRef.current // stream for new user
+          );
+          peersRef.current.push({
+            peerID: payload.callerID,
+            peer,
           });
-        })
-        .catch((err) => console.log(err));
-    }
+          setPeers((users) => [...users, peer]);
+        });
+        socketRef.current.on("user-leave", (e) => {
+          const removedPeer = peersRef.current.filter(
+            (peer) => peer.peerID === e
+          );
+          const newPeers = peersRef.current.filter((peer) => peer.peerID !== e);
+          console.log("user leave");
+          console.log(e);
+          console.log("removedPeer", removedPeer);
+          console.log("newPeers", newPeers);
+          // setPeers(newPeers.map((peer) => peer.peer));
+          peersRef.current = newPeers;
+          setPeers(peersRef.current.map((peer) => peer.peer));
+        });
+        socketRef.current.on("receiving returned signal", (payload) => {
+          const item = peersRef.current.find((p) => p.peerID === payload.id);
+          item.peer.signal(payload.signal);
+          // NOTE :here must remove the old peer form peers array and may in peerRef and may add the new peer
+        });
+      })
+      .catch((err) => {
+        setPermissionDenied(true);
+        console.log(err);
+      });
+  }
+  useEffect(() => {
     ByForce();
 
     return () => {
@@ -132,13 +136,16 @@ const Room = () => {
           stream is a media stream that this peer will send to other peers. 
          config is an optional parameter containing ICE server configuration.
          */
+    console.log("from create peer", clientStreamRef.current?.getTracks());
+
     const peer = new Peer({
       initiator: true,
       trickle: false,
-      stream,
+      stream: ayhamStram ?? stream,
       config: iceConfig,
     });
     console.log(peer);
+
     // This line sets up an event listener for the "signal" event emitted by the peer object.
     //  When the peer generates a signaling message (e.g., an SDP offer or answer),
     // this event will be triggered,
@@ -202,10 +209,13 @@ const Room = () => {
     // incomingSignal :SPD for new user
     // callerID :socket id for new user
     // stream
+    console.log("from add peer", ayhamStram?.getTracks());
+    console.log("from add peer", clientStreamRef.current?.getTracks());
+
     const peer = new Peer({
       initiator: false,
       trickle: false,
-      stream,
+      stream: ayhamStram ?? stream,
       config: iceConfig,
     });
 
@@ -244,51 +254,79 @@ const Room = () => {
     return peer;
   }
 
+  useEffect(() => {
+    console.log("ayham", ayhamStram?.getTracks());
+  }, [ayhamStram]);
+
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        flexDirection: "column",
-      }}
-    >
+    <>
+      <Modal
+        centered
+        onOk={() => {
+          window.location.reload();
+          // ByForce();
+        }}
+        okText="Retry"
+        cancelButtonProps={{
+          style: {
+            display: "none",
+          },
+        }}
+        closable={false}
+        title="Need Permissions"
+        open={permissionDenied}
+      >
+        <p>You have to enable video and audio permission to use our app</p>
+      </Modal>
       <div
         style={{
-          width: "100%",
-          height: "50px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          flexDirection: "column",
+          backgroundColor: "#282829",
+          padding : 10
         }}
       >
-        <Button
-          size="large"
-          danger
-          type="primary"
-          onClick={() => {
-            history.push("/");
-            clientStreamRef.current?.getTracks()?.forEach((track) => {
-              console.log(track);
-              track.stop();
-            });
+        <div
+          style={{
+            width: "100%",
+            height: "50px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          Leave Room
-        </Button>
+          <Button
+            size="large"
+            danger
+            type="primary"
+            onClick={() => {
+              history.push("/");
+              clientStreamRef.current?.getTracks()?.forEach((track) => {
+                console.log(track);
+                track.stop();
+              });
+            }}
+          >
+            Leave Room
+          </Button>
+        </div>
+        <Container>
+          <ClientVideo
+            ayhamStram={ayhamStram}
+            setAyhamStream={setAyhamStream}
+            clientStream={clientStreamRef.current}
+            userVideo={userVideo}
+            localConnection={localConnection}
+            peers={peers}
+          />
+          {peers.map((peer, index) => {
+            return <Video key={peersRef.current[index].peerID} peer={peer} />;
+          })}
+        </Container>
       </div>
-      <Container>
-        <ClientVideo
-          clientStream={clientStreamRef.current}
-          userVideo={userVideo}
-          localConnection={localConnection}
-          peers={peers}
-        />
-        {peers.map((peer, index) => {
-          return <Video key={peersRef.current[index].peerID} peer={peer} />;
-        })}
-      </Container>
-    </div>
+    </>
   );
 };
 

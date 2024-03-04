@@ -9,11 +9,11 @@ import img from "../assets/test.png";
 import styles from "./styles.module.css";
 import { isMobileDevice } from "../helpers/isMobileDevice";
 
-function ClientVideo({ userVideo, peers, clientStream }) {
+function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
   const [video, setVideo] = useState(false);
   const [mute, setMute] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
-
+  const [state, setState] = useState();
   useEffect(() => {
     if (clientStream) {
       setVideo(!!clientStream.getVideoTracks()[0]?.enabled);
@@ -45,6 +45,8 @@ function ClientVideo({ userVideo, peers, clientStream }) {
           video: true,
         })
         .then((shareStreem) => {
+          setAyhamStream(shareStreem);
+          console.log(clientStream.getTracks());
           // setClientStream(shareStreem);
           userVideo.current.srcObject = shareStreem;
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
@@ -57,7 +59,9 @@ function ClientVideo({ userVideo, peers, clientStream }) {
             );
           });
           clientStream = shareStreem;
-          console.log(clientStream);
+          setState(shareStreem);
+
+          console.log(clientStream.getTracks());
           setScreenSharing(true);
         })
         .catch((e) => {
@@ -66,12 +70,14 @@ function ClientVideo({ userVideo, peers, clientStream }) {
           // setVideo(false);
         });
     } else if (screenSharing && clientStream) {
+      console.log(clientStream.getTracks());
       navigator.mediaDevices
         .getUserMedia({
           audio: true,
           video: true,
         })
         .then((vedioStream) => {
+          setAyhamStream(vedioStream);
           // setClientStream(vedioStream);
           userVideo.current.srcObject = vedioStream;
           const vedioStreamTrack = vedioStream.getVideoTracks()[0];
@@ -85,7 +91,8 @@ function ClientVideo({ userVideo, peers, clientStream }) {
             );
           });
           clientStream = vedioStream;
-          console.log(clientStream);
+          state.getTracks().forEach((track) => track.stop());
+          console.log(clientStream.getTracks());
           setScreenSharing(false);
         })
         .catch((e) => {
@@ -96,7 +103,11 @@ function ClientVideo({ userVideo, peers, clientStream }) {
     }
   };
 
-  // useEffect(() => {}, [screenSharing]);
+  useEffect(() => {
+    return () => {
+      state?.getTracks().forEach((track) => track.stop());
+    };
+  }, [state]);
 
   return (
     <div className={styles.videoFrame}>
