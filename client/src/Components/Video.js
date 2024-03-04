@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { StyledVideo } from "./StyledVideo";
 import { generateRandomColor } from "../helpers/generateBorderColor";
-const Video = (props) => {
+import { v1 as uuid } from "uuid";
+
+const Video = ({ peer, ...restProps }) => {
   const ref = useRef();
 
   useEffect(() => {
-    props.peer.on("stream", (stream) => {
+    peer.on("stream", (stream) => {
       console.log(stream);
       ref.current.srcObject = stream;
     });
@@ -17,6 +19,7 @@ const Video = (props) => {
       autoPlay
       ref={ref}
       borderColor={generateRandomColor()}
+      // key={uuid()}
     />
   );
 };

@@ -10,10 +10,8 @@ import styles from "./styles.module.css";
 
 function ClientVideo({
   userVideo,
-  localConnection,
   peers,
   clientStream,
-  setClientStream,
 }) {
   const [video, setVideo] = useState(false);
   const [mute, setMute] = useState(false);
@@ -21,7 +19,6 @@ function ClientVideo({
 
   useEffect(() => {
     if (clientStream) {
-      console.log(clientStream.getVideoTracks()[0]);
       setVideo(!!clientStream.getVideoTracks()[0]?.enabled);
       setMute(!!clientStream.getAudioTracks()[0]?.enabled);
     }
@@ -62,6 +59,8 @@ function ClientVideo({
               clientStream
             );
           });
+          clientStream = shareStreem;
+          console.log(clientStream);
         })
         .catch((e) => console.log(e));
     } else if (!screenSharing && clientStream) {
@@ -83,6 +82,8 @@ function ClientVideo({
               clientStream
             );
           });
+          clientStream = vedioStream;
+          console.log(clientStream);
         })
         .catch((e) => console.log(e));
     }

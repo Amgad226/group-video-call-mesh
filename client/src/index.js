@@ -3,10 +3,10 @@ import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
-import * as process from "process";
+// import * as process from "process";
 
 // window.global = window;
-window.process = process;
+// window.process = process;
 // window.Buffer = [];
 ReactDOM.render(
   <React.StrictMode>
