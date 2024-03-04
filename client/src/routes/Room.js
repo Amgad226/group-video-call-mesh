@@ -167,7 +167,7 @@ const Room = () => {
     peer.on("close", (err) => {
       console.log(err);
     });
-    peer.on("pause", (err) => {
+    peer.on("pause", (err) => { 
       console.log(err);
     });
     peer.once("error", (err) => {

@@ -118,6 +118,13 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
         ref={userVideo}
         autoPlay
         playsInline
+        style={
+          !screenSharing
+            ? {
+                transform: "scaleX(-1)",
+              }
+            : {}
+        }
       />
 
       {!video && <img src={img} className={styles.alt} />}
