@@ -5,7 +5,7 @@ FROM node:16.15.0
 WORKDIR /app
 
 # Install required system libraries
-RUN apk add --no-cache libc6-compat
+# RUN apk add --no-cache libc6-compat
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
