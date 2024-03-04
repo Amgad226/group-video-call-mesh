@@ -16,63 +16,76 @@ app.get('/', (req, res) => {
 );
 io.on('connection', socket => {
     socket.on("join room", roomID => {
+        // {
+        //     "room_ID":[12],
+        //     "room_ID":[12,12,312,312]
+        // }
         console.log('join room')
         if (users[roomID]) {
-            const length = users[roomID].length;
-            // if (length === 4) {
-            //     socket.emit("room full");
-            //     return;
-            // } 
             users[roomID].push(socket.id);
         } else {
             users[roomID] = [socket.id];
         }
+
+        // {
+        //     "socket_id_21312":"amgad"
+        // }
+
         socketToRoom[socket.id] = roomID;
         const usersInThisRoom = users[roomID].filter(id => id !== socket.id);
 
-    socket.emit("all users", usersInThisRoom);
-  });
-
-  socket.on("sending signal", (payload) => {
-    console.log("sending signal");
-    io.to(payload.userToSignal).emit("user joined", {
-      signal: payload.signal,
-      callerID: payload.callerID,
+        socket.emit("all users", usersInThisRoom);
     });
-  });
 
-  socket.on("returning signal", (payload) => {
-    console.log("returning signal");
-    io.to(payload.callerID).emit("receiving returned signal", {
-      signal: payload.signal,
-      id: socket.id,
+    socket.on("sending signal", (payload) => {
+        // payload:
+        // userToSignal,// any user_socket_id in room (old user in room)
+        // callerID, // my socket id (new user for room)
+        // signal,// may be have the sdp offer or answer 
+
+        console.log("sending signal");
+        // send event to user_socket_id that stay in room (old user in room )
+        io.to(payload.userToSignal).emit("user joined", {
+            signal: payload.signal, //new user SDP 
+            callerID: payload.callerID, // new_user_socket_id
+        });
     });
-  });
 
-  socket.on("close", () => {
-    console.log("leave");
-    const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
-    if (room) {
-      room = room.filter((id) => id !== socket.id);
-      users[roomID] = room;
-    }
-    // socket.emit("user leave", 1);
-  });
+    socket.on("returning signal", (payload) => {
+        //payload is 
+        //signal is the SDP for old user
+        // callerID :socket id for new user
+        console.log("returning signal");
+        io.to(payload.callerID).emit("receiving returned signal", {
+            signal: payload.signal,
+            id: socket.id,
+        });
+    });
 
-  socket.on("disconnect", () => {
-    console.log("disconnect");
+    socket.on("close", () => {
+        console.log("leave");
+        const roomID = socketToRoom[socket.id];
+        let room = users[roomID];
+        if (room) {
+            room = room.filter((id) => id !== socket.id);
+            users[roomID] = room;
+        }
+        // socket.emit("user leave", 1);
+    });
 
-    const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
-    if (room) {
-      room = room.filter((id) => id !== socket.id);
-      users[roomID] = room;
-    }
-    // const usersInThisRoom = users[roomID].filter((id) => id !== socket.id);
-    socket.emit("user-leave");
-    io.emit("user-leave");
-  });
+    socket.on("disconnect", () => {
+        console.log("disconnect");
+
+        const roomID = socketToRoom[socket.id];
+        let room = users[roomID];
+        if (room) {
+            room = room.filter((id) => id !== socket.id);
+            users[roomID] = room;
+        }
+        // const usersInThisRoom = users[roomID].filter((id) => id !== socket.id);
+        socket.emit("user-leave");
+        io.emit("user-leave");
+    });
 });
 
 server.listen(3001, () => console.log("server is running on port 3001"));
