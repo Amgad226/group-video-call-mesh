@@ -8,7 +8,11 @@ import Video from "../Components/Video";
 import { iceConfig } from "../config/iceConfig";
 import { checkCameraDevices } from "../helpers/checkCameraDevice";
 import { checkAudioDevices } from "../helpers/checkAudioDevices";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
+import { Button } from "antd";
+
 const Room = () => {
+  const history = useHistory();
   const [peers, setPeers] = useState([]);
   const socketRef = useRef();
   const userVideo = useRef();
@@ -18,9 +22,9 @@ const Room = () => {
 
   useEffect(() => {
     async function ByForce() {
-      socketRef.current = io.connect("https://yorkbritishacademy.net/");
+      // socketRef.current = io.connect("https://yorkbritishacademy.net/");
 
-      // socketRef.current = io.connect("http://localhost:3001");
+      socketRef.current = io.connect("http://localhost:3001");
       navigator.mediaDevices
         .getUserMedia({
           video: (await checkCameraDevices())
@@ -241,17 +245,50 @@ const Room = () => {
   }
 
   return (
-    <Container>
-      <ClientVideo
-        clientStream={clientStreamRef.current}
-        userVideo={userVideo}
-        localConnection={localConnection}
-        peers={peers}
-      />
-      {peers.map((peer, index) => {
-        return <Video key={peersRef.current[index].peerID} peer={peer} />;
-      })}
-    </Container>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          height: "50px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Button
+          size="large"
+          danger
+          type="primary"
+          onClick={() => {
+            history.push("/");
+            clientStreamRef.current?.getTracks()?.forEach((track) => {
+              console.log(track);
+              track.stop();
+            });
+          }}
+        >
+          Leave Room
+        </Button>
+      </div>
+      <Container>
+        <ClientVideo
+          clientStream={clientStreamRef.current}
+          userVideo={userVideo}
+          localConnection={localConnection}
+          peers={peers}
+        />
+        {peers.map((peer, index) => {
+          return <Video key={peersRef.current[index].peerID} peer={peer} />;
+        })}
+      </Container>
+    </div>
   );
 };
 

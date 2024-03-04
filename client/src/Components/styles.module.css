@@ -16,16 +16,20 @@
   object-fit: cover;
   z-index: 0;
   background-color: black;
+  /*transform: scaleX(-1); Flip horizontally because the share screen breaks */
 }
 .acitons {
   width: 100%;
   height: auto;
   margin-top: auto;
-  margin-bottom: 30px;
+  /* margin-bottom: 10px; */
   position: relative;
   display: flex;
   justify-content: space-evenly;
   padding-inline: 20px;
+  background-color: rgba(0, 0, 0, 0.46);
+  backdrop-filter: blur(10px);
+  padding-block: 10px;
 }
 .icon {
   position: relative;
