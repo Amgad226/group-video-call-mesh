@@ -1,11 +1,11 @@
 # Use Node.js base image
-FROM node:20.11.1-alpine3.19
+FROM node:16.15.0
 
 # Set working directory
 WORKDIR /app
 
 # Install required system libraries
-RUN apk add --no-cache libc6-compat
+# RUN apk add --no-cache libc6-compat
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
