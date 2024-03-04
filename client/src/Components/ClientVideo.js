@@ -7,12 +7,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import img from "../assets/test.png";
 import styles from "./styles.module.css";
+import { isMobileDevice } from "../helpers/isMobileDevice";
 
-function ClientVideo({
-  userVideo,
-  peers,
-  clientStream,
-}) {
+function ClientVideo({ userVideo, peers, clientStream }) {
   const [video, setVideo] = useState(false);
   const [mute, setMute] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
@@ -113,11 +110,13 @@ function ClientVideo({
           className={`${styles.icon} ${!video && styles.danger}`}
           icon={faVideoSlash}
         />
-        <FontAwesomeIcon
-          onClick={() => setScreenSharing(!screenSharing)}
-          className={`${styles.icon} ${screenSharing && styles.active}`}
-          icon={faDesktop}
-        />
+        {!isMobileDevice() && (
+          <FontAwesomeIcon
+            onClick={() => setScreenSharing(!screenSharing)}
+            className={`${styles.icon} ${screenSharing && styles.active}`}
+            icon={faDesktop}
+          />
+        )}
       </div>
     </div>
   );
