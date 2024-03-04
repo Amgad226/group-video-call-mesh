@@ -37,8 +37,8 @@ function ClientVideo({ userVideo, peers, clientStream }) {
     }
   }, [mute]);
 
-  useEffect(() => {
-    if (screenSharing && clientStream) {
+  const setShareScreen = () => {
+    if (!screenSharing && clientStream) {
       navigator.mediaDevices
         .getDisplayMedia({
           audio: true,
@@ -58,9 +58,14 @@ function ClientVideo({ userVideo, peers, clientStream }) {
           });
           clientStream = shareStreem;
           console.log(clientStream);
+          setScreenSharing(true);
         })
-        .catch((e) => console.log(e));
-    } else if (!screenSharing && clientStream) {
+        .catch((e) => {
+          console.log(e);
+          // setMute(false);
+          // setVideo(false);
+        });
+    } else if (screenSharing && clientStream) {
       navigator.mediaDevices
         .getUserMedia({
           audio: true,
@@ -81,10 +86,17 @@ function ClientVideo({ userVideo, peers, clientStream }) {
           });
           clientStream = vedioStream;
           console.log(clientStream);
+          setScreenSharing(false);
         })
-        .catch((e) => console.log(e));
+        .catch((e) => {
+          console.log(e);
+          setMute(true);
+          setVideo(true);
+        });
     }
-  }, [screenSharing]);
+  };
+
+  // useEffect(() => {}, [screenSharing]);
 
   return (
     <div className={styles.videoFrame}>
@@ -112,7 +124,7 @@ function ClientVideo({ userVideo, peers, clientStream }) {
         />
         {!isMobileDevice() && (
           <FontAwesomeIcon
-            onClick={() => setScreenSharing(!screenSharing)}
+            onClick={() => setShareScreen()}
             className={`${styles.icon} ${screenSharing && styles.active}`}
             icon={faDesktop}
           />
