@@ -7,10 +7,14 @@ const Video = ({ peer, ...restProps }) => {
   const ref = useRef();
 
   useEffect(() => {
-    peer.on("stream", (stream) => {
-      console.log(stream);
-      ref.current.srcObject = stream;
-    });
+    peer.ontrack = handleTrackEvent;
+    // peer.on("stream", (stream) => {
+    //   console.log(stream);
+    //   ref.current.srcObject = stream;
+    // });
+    function handleTrackEvent(e) {
+      ref.current.srcObject = e.streams[0];
+    }
   }, []);
 
   return (

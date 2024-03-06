@@ -15,25 +15,39 @@ app.get("/", (req, res) => {
 });
 io.on("connection", (socket) => {
   socket.on("join room", (roomID) => {
-    // {
-    //     "room_ID":[12],
-    //     "room_ID":[12,12,312,312]
-    // }
     console.log("join room", socket.id);
     if (users[roomID]) {
       users[roomID].push(socket.id);
     } else {
       users[roomID] = [socket.id];
     }
-
-    // {
-    //     "socket_id_21312":"amgad"
-    // }
-
     socketToRoom[socket.id] = roomID;
     const usersInThisRoom = users[roomID].filter((id) => id !== socket.id);
-
     socket.emit("all users", usersInThisRoom);
+  });
+
+  socket.on("offer", (payload) => {
+    console.log("offer");
+    io.to(payload.userToSignal).emit("offer", {
+      signal: payload.signal, //new user SDP
+      callerID: payload.callerID, // new_user_socket_id
+    });
+  });
+
+  socket.on("answer", (payload) => {
+    console.log("answer");
+    io.to(payload.userToSignal).emit("answer", {
+      signal: payload.signal,
+      id: socket.id,
+    });
+  });
+
+  socket.on("ice-candidate", (payload) => {
+    console.log("ice-candidate");
+    io.to(payload.userToSignal).emit("ice-candidate", {
+      candidate: payload.candidate,
+      id: socket.id,
+    });
   });
 
   socket.on("sending signal", (payload) => {
@@ -41,7 +55,6 @@ io.on("connection", (socket) => {
     // userToSignal,// any user_socket_id in room (old user in room)
     // callerID, // my socket id (new user for room)
     // signal,// may be have the sdp offer or answer
-
     console.log("sending signal");
     // send event to user_socket_id that stay in room (old user in room )
     io.to(payload.userToSignal).emit("user joined", {
