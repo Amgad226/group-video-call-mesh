@@ -51,12 +51,12 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
           userVideo.current.srcObject = shareStreem;
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
           peers?.forEach((peer) => {
-            console.log(peer.streams[0].getVideoTracks()[0]);
-            peer.replaceTrack(
-              peer.streams[0].getVideoTracks()[0],
-              screenSharingTrack,
-              clientStream
-            );
+            const sender = peer
+              .getSenders()
+              .find((s) => s.track.kind === "video");
+
+            console.log(sender);
+            sender.replaceTrack(screenSharingTrack);
           });
           clientStream = shareStreem;
           setState(shareStreem);
@@ -81,14 +81,14 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
           // setClientStream(vedioStream);
           userVideo.current.srcObject = vedioStream;
           const vedioStreamTrack = vedioStream.getVideoTracks()[0];
+
           peers?.forEach((peer) => {
+            const sender = peer
+              .getSenders()
+              .find((s) => s.track.kind === "video");
             console.log(peer.streams);
             console.log(clientStream);
-            peer.replaceTrack(
-              peer.streams[0].getVideoTracks()[0],
-              vedioStreamTrack,
-              clientStream
-            );
+            sender.replaceTrack(vedioStreamTrack);
           });
           clientStream = vedioStream;
           state.getTracks().forEach((track) => track.stop());
