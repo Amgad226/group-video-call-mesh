@@ -26,8 +26,8 @@ const Room = () => {
   const partnerVideo = useRef();
 
   async function ByForce() {
-    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    socketRef.current = io.connect("http://localhost:3001");
+    socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    // socketRef.current = io.connect("http://localhost:3001");
     navigator.mediaDevices
       .getUserMedia({
         video: (await checkCameraDevices())
@@ -47,30 +47,15 @@ const Room = () => {
 
         socketRef.current.emit("join room", roomID);
 
-        socketRef.current.on("all users", (users) => {
-          const peers = [];
-          users.forEach((userID) => {
-            //user id is the old socket_id already in room
-            const peer = callUser(
-              userID, // the old user socket id
-              socketRef.current.id, // new user socket id
-              clientStreamRef.current // stream for new user
-            );
-            // the peer is the peer of the new user
-            peersRef.current.push({
-              peerID: userID,
-              peer,
-            });
-            peers.push(peer);
-          });
-          setPeers(peers);
-        });
+        socketRef.current.on("all users", handleAllUsersEvent);
 
         socketRef.current.on("offer", handleRecieveCall);
 
         socketRef.current.on("answer", handleAnswer);
 
         socketRef.current.on("ice-candidate", handleNewICECandidateMsg);
+
+        socketRef.current.on("user-leave", handleUserLeave);
 
         // socketRef.current.on("all users", (users) => {
         //   const peers = [];
@@ -113,25 +98,11 @@ const Room = () => {
         //   });
         //   setPeers((users) => [...users, peer]);
         // });
-
-        socketRef.current.on("user-leave", (e) => {
-          const removedPeer = peersRef.current.filter(
-            (peer) => peer.peerID === e
-          );
-          const newPeers = peersRef.current.filter((peer) => peer.peerID !== e);
-          console.log("user leave");
-          console.log(e);
-          console.log("removedPeer", removedPeer);
-          console.log("newPeers", newPeers);
-          // setPeers(newPeers.map((peer) => peer.peer));
-          peersRef.current = newPeers;
-          setPeers(peersRef.current.map((peer) => peer.peer));
-        });
-        socketRef.current.on("receiving returned signal", (payload) => {
-          const item = peersRef.current.find((p) => p.peerID === payload.id);
-          item.peer.signal(payload.signal);
-          // NOTE :here must remove the old peer form peers array and may in peerRef and may add the new peer
-        });
+        // socketRef.current.on("receiving returned signal", (payload) => {
+        //   const item = peersRef.current.find((p) => p.peerID === payload.id);
+        //   item.peer.signal(payload.signal);
+        //   // NOTE :here must remove the old peer form peers array and may in peerRef and may add the new peer
+        // });
       })
       .catch((err) => {
         setPermissionDenied(true);
@@ -140,11 +111,29 @@ const Room = () => {
   }
   useEffect(() => {
     ByForce();
-
     return () => {
       socketRef.current.disconnect();
     };
   }, []);
+
+  function callUser(userID, socket_id, clientStream) {
+    const peer = createPeer(userID);
+    clientStream
+      .getTracks()
+      .forEach((track) => peer.addTrack(track, clientStream));
+
+    return peer;
+  }
+
+  function createPeer(userID) {
+    const peer = new RTCPeerConnection(iceConfig);
+
+    peer.onicecandidate = (e) => handleICECandidateEvent(e, userID);
+    // peer.ontrack = handleTrackEvent;
+    peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID, peer);
+
+    return peer;
+  }
 
   function handleRecieveCall(incoming) {
     const peer = createPeer();
@@ -193,6 +182,66 @@ const Room = () => {
     );
     console.log("new Ice", item);
     item.peer.addIceCandidate(candidate).catch((e) => console.log(e));
+  }
+
+  function handleNegotiationNeededEvent(userID, peer) {
+    peer
+      .createOffer()
+      .then((offer) => {
+        return peer.setLocalDescription(offer);
+      })
+      .then(() => {
+        const payload = {
+          userToSignal: userID,
+          callerID: socketRef.current.id,
+          signal: peer.localDescription,
+        };
+        socketRef.current.emit("offer", payload);
+      })
+      .catch((e) => console.log(e));
+  }
+
+  function handleICECandidateEvent(e, userId) {
+    if (e?.candidate) {
+      const payload = {
+        userToSignal: userId,
+        candidate: e.candidate,
+      };
+      socketRef.current.emit("ice-candidate", payload);
+    }
+  }
+
+  function handleAllUsersEvent(users) {
+    const peers = [];
+    users.forEach((userID) => {
+      //user id is the old socket_id already in room
+      const peer = callUser(
+        userID, // the old user socket id
+        socketRef.current.id, // new user socket id
+        clientStreamRef.current // stream for new user
+      );
+      // the peer is the peer of the new user
+      peersRef.current.push({
+        peerID: userID,
+        peer,
+      });
+      peers.push(peer);
+    });
+    setPeers(peers);
+  }
+
+  function handleUserLeave(userID) {
+    const removedPeer = peersRef.current.filter(
+      (peer) => peer.peerID === userID
+    );
+    const newPeers = peersRef.current.filter((peer) => peer.peerID !== userID);
+    console.log("user leave");
+    console.log(userID);
+    console.log("removedPeer", removedPeer);
+    console.log("newPeers", newPeers);
+    // setPeers(newPeers.map((peer) => peer.peer));
+    peersRef.current = newPeers;
+    setPeers(peersRef.current.map((peer) => peer.peer));
   }
 
   //   socketRef?.current?.on("user-leave", (e) => {
@@ -338,70 +387,6 @@ const Room = () => {
   // useEffect(() => {
   //   console.log("ayham", ayhamStram?.getTracks());
   // }, [ayhamStram]);
-
-  function callUser(userID, socket_id, clientStream) {
-    const peer = createPeer(userID);
-    clientStream
-      .getTracks()
-      .forEach((track) => peer.addTrack(track, clientStream));
-
-    return peer;
-  }
-
-  function createPeer(userID) {
-    const peer = new RTCPeerConnection(
-      //iceConfig
-      {
-        iceServers: [
-          {
-            urls: "stun:stun.stunprotocol.org",
-          },
-          {
-            urls: "turn:numb.viagenie.ca",
-            credential: "muazkh",
-            username: "webrtc@live.com",
-          },
-        ],
-      }
-    );
-
-    peer.onicecandidate = (e) => handleICECandidateEvent(e, userID);
-    // peer.ontrack = handleTrackEvent;
-    peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID, peer);
-
-    return peer;
-  }
-
-  function handleNegotiationNeededEvent(userID, peer) {
-    peer
-      .createOffer()
-      .then((offer) => {
-        return peer.setLocalDescription(offer);
-      })
-      .then(() => {
-        const payload = {
-          userToSignal: userID,
-          callerID: socketRef.current.id,
-          signal: peer.localDescription,
-        };
-        socketRef.current.emit("offer", payload);
-      })
-      .catch((e) => console.log(e));
-  }
-
-  function handleTrackEvent(e) {
-    partnerVideo.current.srcObject = e.streams[0];
-  }
-
-  function handleICECandidateEvent(e, userId) {
-    if (e?.candidate) {
-      const payload = {
-        userToSignal: userId,
-        candidate: e.candidate,
-      };
-      socketRef.current.emit("ice-candidate", payload);
-    }
-  }
 
   return (
     <>
