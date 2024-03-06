@@ -1,5 +1,5 @@
 stages:
-  - build_backend
+  # - build_backend
   - build_frontend
 # 
 variables:
