@@ -4,43 +4,43 @@ import styled from "styled-components";
 
 // Styled container component
 const Container = styled.div`
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #E9f9F2; /* Background color */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #e9f9f2; /* Background color */
 `;
 
 // Styled button component
 const StyledButton = styled.button`
-    padding: 10px 20px;
-    font-size: 30px;
-    font-weight: bold;
-    color: #fff;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    
-    &:hover {
-        background-color: #0056b3;
-    }
+  padding: 10px 20px;
+  font-size: 30px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #0056b3;
+  }
 `;
 
 // CreateRoom component
 const CreateRoom = (props) => {
-    // Function to create a room
-    function create() {
-        const id = uuid();
-        props.history.push(`/room/${id}`);
-    }
+  // Function to create a room
+  function create() {
+    const id = uuid();
+    props.history.push(`/room/${id}`);
+  }
 
-    return (
-        <Container>
-            <StyledButton onClick={create}>WYYXX Create new room XXYYW</StyledButton>
-        </Container>
-    );
+  return (
+    <Container>
+      <StyledButton onClick={create}> Create new room </StyledButton>
+    </Container>
+  );
 };
 
 export default CreateRoom;

@@ -185,20 +185,23 @@ const Room = () => {
   }
 
   function handleNegotiationNeededEvent(userID, peer) {
-    peer
-      .createOffer()
-      .then((offer) => {
-        return peer.setLocalDescription(offer);
-      })
-      .then(() => {
-        const payload = {
-          userToSignal: userID,
-          callerID: socketRef.current.id,
-          signal: peer.localDescription,
-        };
-        socketRef.current.emit("offer", payload);
-      })
-      .catch((e) => console.log(e));
+    console.log("Negotiation", userID, peer);
+    if (userID) {
+      peer
+        .createOffer()
+        .then((offer) => {
+          return peer.setLocalDescription(offer);
+        })
+        .then(() => {
+          const payload = {
+            userToSignal: userID,
+            callerID: socketRef.current.id,
+            signal: peer.localDescription,
+          };
+          socketRef.current.emit("offer", payload);
+        })
+        .catch((e) => console.log(e));
+    }
   }
 
   function handleICECandidateEvent(e, userId) {
