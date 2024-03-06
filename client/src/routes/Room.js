@@ -181,7 +181,13 @@ const Room = () => {
       (peerRef) => peerRef.peerID === incoming.id
     );
     console.log("new Ice", item);
-    item.peer.addIceCandidate(candidate).catch((e) => console.log(e));
+    console.log("state before", item.iceConnectionState);
+    item.peer
+      .addIceCandidate(candidate)
+      .then(() => {
+        console.log("state after", item.iceConnectionState);
+      })
+      .catch((e) => console.log(e));
   }
 
   function handleNegotiationNeededEvent(userID, peer) {
@@ -206,6 +212,10 @@ const Room = () => {
 
   function handleICECandidateEvent(e, userId) {
     if (e?.candidate) {
+      const item = peersRef.current.find(
+        (peerRef) => peerRef.peerID === userId
+      );
+      console.log("before ice event to server", item.iceConnectionState , );
       const payload = {
         userToSignal: userId,
         candidate: e.candidate,

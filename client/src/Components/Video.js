@@ -13,6 +13,7 @@ const Video = ({ peer, ...restProps }) => {
     //   ref.current.srcObject = stream;
     // });
     function handleTrackEvent(e) {
+      console.log("from track", e.iceConnectionState);
       ref.current.srcObject = e.streams[0];
     }
   }, []);
