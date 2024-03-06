@@ -1,8 +1,8 @@
 export const iceConfig = {
   // sdpSemantics: "unified-plan",
-  // iceTransportPolicy: "all",
-  // bundlePolicy: "balanced",
-  // rtcpMuxPolicy: "negotiate",
+  iceTransportPolicy: "all",
+  bundlePolicy: "balanced",
+  rtcpMuxPolicy: "negotiate",
   iceServers: [
     {
       urls: "stun:stun.relay.metered.ca:80",
