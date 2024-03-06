@@ -181,11 +181,11 @@ const Room = () => {
       (peerRef) => peerRef.peerID === incoming.id
     );
     console.log("new Ice", item);
-    console.log("state before", item.iceConnectionState);
+    console.log("state before", item?.peer.iceConnectionState);
     item.peer
       .addIceCandidate(candidate)
       .then(() => {
-        console.log("state after", item.iceConnectionState);
+        console.log("state after", item?.peer.iceConnectionState);
       })
       .catch((e) => console.log(e));
   }
@@ -219,7 +219,7 @@ const Room = () => {
         "before ice event to server",
         userId,
         item,
-        item?.iceConnectionState
+        item?.peer.iceConnectionState
       );
       const payload = {
         userToSignal: userId,
