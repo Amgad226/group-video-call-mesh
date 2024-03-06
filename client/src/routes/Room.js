@@ -215,7 +215,12 @@ const Room = () => {
       const item = peersRef.current.find(
         (peerRef) => peerRef.peerID === userId
       );
-      console.log("before ice event to server", item.iceConnectionState , );
+      console.log(
+        "before ice event to server",
+        userId,
+        item,
+        item?.iceConnectionState
+      );
       const payload = {
         userToSignal: userId,
         candidate: e.candidate,
