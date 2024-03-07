@@ -53,16 +53,22 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
           peers?.forEach((peer) => {
             const sender = peer
               .getSenders()
-              .find((s) => s.track.kind === "video");
+              .find((s) => s?.track?.kind === "video");
 
             console.log(sender);
-            sender.replaceTrack(screenSharingTrack);
+            if (sender) {
+              // peer.addTrack(screenSharingTrack, shareStreem);
+              sender.replaceTrack(screenSharingTrack, clientStream);
+            } else {
+              peer.addTrack(clientStream.getVideoTracks()[0], clientStream);
+            }
           });
           clientStream = shareStreem;
           setState(shareStreem);
 
-          console.log(clientStream.getTracks());
+          console.log("clientStream ref", clientStream.getTracks());
           setScreenSharing(true);
+          setVideo(true);
         })
         .catch((e) => {
           console.log(e);
