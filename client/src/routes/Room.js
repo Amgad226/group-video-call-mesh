@@ -26,8 +26,8 @@ const Room = () => {
   const partnerVideo = useRef();
 
   async function ByForce() {
-    socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    // socketRef.current = io.connect("http://localhost:3001");
+    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    socketRef.current = io.connect("http://localhost:3001");
     navigator.mediaDevices
       .getUserMedia({
         video: (await checkCameraDevices())
@@ -117,7 +117,7 @@ const Room = () => {
   }, []);
 
   function callUser(userID, socket_id, clientStream) {
-    const peer = createPeer(userID);
+    const peer = createPeer(userID, true);
     clientStream
       .getTracks()
       .forEach((track) => peer.addTrack(track, clientStream));
@@ -125,18 +125,23 @@ const Room = () => {
     return peer;
   }
 
-  function createPeer(userID) {
-    const peer = new RTCPeerConnection(iceConfig);
+  function createPeer(userID, initiator) {
+    const peer = new RTCPeerConnection(
+      Object.assign({}, Peer.config, iceConfig)
+    );
 
     peer.onicecandidate = (e) => handleICECandidateEvent(e, userID);
     // peer.ontrack = handleTrackEvent;
-    peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID, peer);
+    if (initiator) {
+      peer.onnegotiationneeded = () =>
+        handleNegotiationNeededEvent(userID, peer);
+    }
 
     return peer;
   }
 
   function handleRecieveCall(incoming) {
-    const peer = createPeer();
+    const peer = createPeer(incoming.callerID, false);
     const desc = new RTCSessionDescription(incoming.signal);
     peer
       .setRemoteDescription(desc)
