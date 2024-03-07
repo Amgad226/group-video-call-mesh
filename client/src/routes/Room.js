@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import Peer from "simple-peer";
 import io from "socket.io-client";
 import ClientVideo from "../Components/ClientVideo";
 import { Container } from "../Components/Container";
@@ -126,9 +125,7 @@ const Room = () => {
   }
 
   function createPeer(userID, initiator) {
-    const peer = new RTCPeerConnection(
-      Object.assign({}, Peer.config, iceConfig)
-    );
+    const peer = new RTCPeerConnection(iceConfig);
 
     peer.onicecandidate = (e) => handleICECandidateEvent(e, userID);
     // peer.ontrack = handleTrackEvent;
