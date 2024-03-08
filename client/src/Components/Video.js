@@ -1,10 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyledVideo } from "./StyledVideo";
 import { generateRandomColor } from "../helpers/generateBorderColor";
-import { v1 as uuid } from "uuid";
+import styles from "./styles.module.css";
+import SoundVolumeMeter from "./SoundMeter";
 
 const Video = ({ peer, ...restProps }) => {
   const ref = useRef();
+  const [forSoundTrackStream, setforSoundTrackStream] = useState();
 
   useEffect(() => {
     peer.ontrack = handleTrackEvent;
@@ -15,17 +17,42 @@ const Video = ({ peer, ...restProps }) => {
     function handleTrackEvent(e) {
       console.log("from track", e);
       ref.current.srcObject = e.streams[0];
+      setforSoundTrackStream(e.streams[0]);
     }
   }, []);
 
+  const requestFullScreen = () => {
+    if (ref.current.requestFullscreen) {
+      ref.current.requestFullscreen();
+    } else if (ref.current.mozRequestFullScreen) {
+      // Firefox
+      ref.current.mozRequestFullScreen();
+    } else if (ref.current.webkitRequestFullscreen) {
+      // Chrome, Safari and Opera
+      ref.current.webkitRequestFullscreen();
+    } else if (ref.current.msRequestFullscreen) {
+      // IE/Edge
+      ref.current.msRequestFullscreen();
+    }
+  };
+
   return (
-    <StyledVideo
-      playsInline
-      autoPlay
-      ref={ref}
-      borderColor={generateRandomColor()}
-      // key={uuid()}
-    />
+    <div className={`${styles.peerVideo} ${styles.videoFrame}`}>
+      <StyledVideo
+        onClick={() => {
+          requestFullScreen();
+        }}
+        playsInline
+        autoPlay
+        ref={ref}
+        borderColor={generateRandomColor()}
+
+        // key={uuid()}
+      />
+      {forSoundTrackStream && (
+        <SoundVolumeMeter mediaStream={forSoundTrackStream} />
+      )}
+    </div>
   );
 };
 

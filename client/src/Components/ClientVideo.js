@@ -8,14 +8,18 @@ import React, { useEffect, useState } from "react";
 import img from "../assets/test.png";
 import styles from "./styles.module.css";
 import { isMobileDevice } from "../helpers/isMobileDevice";
-
+import { Button } from "antd";
+import SoundVolumeMeter from "./SoundMeter";
 function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
   const [video, setVideo] = useState(false);
   const [mute, setMute] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
   const [state, setState] = useState();
+  const [initDone, setInitDone] = useState(false);
+
   useEffect(() => {
-    if (clientStream) {
+    if (clientStream && !initDone) {
+      setInitDone(true);
       setVideo(!!clientStream.getVideoTracks()[0]?.enabled);
       setMute(!!clientStream.getAudioTracks()[0]?.enabled);
     }
@@ -23,9 +27,12 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
 
   useEffect(() => {
     if (!video && clientStream) {
+      console.log(clientStream.getVideoTracks());
       clientStream.getVideoTracks().forEach((track) => (track.enabled = false));
+      state?.getTracks().forEach((track) => (track.enabled = false));
     } else {
       clientStream?.getVideoTracks().forEach((track) => (track.enabled = true));
+      state?.getTracks().forEach((track) => (track.enabled = true));
     }
   }, [video]);
 
@@ -53,16 +60,23 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
           peers?.forEach((peer) => {
             const sender = peer
               .getSenders()
-              .find((s) => s.track.kind === "video");
+              .find((s) => s?.track?.kind === "video");
 
             console.log(sender);
-            sender.replaceTrack(screenSharingTrack);
+            if (sender) {
+              sender.replaceTrack(screenSharingTrack);
+            } else {
+              peer.addTrack(screenSharingTrack, clientStream);
+            }
           });
-          clientStream = shareStreem;
+          // clientStream = shareStreem;
           setState(shareStreem);
-
-          console.log(clientStream.getTracks());
+          console.log("clientStream ref", clientStream.getTracks());
           setScreenSharing(true);
+          setVideo(true);
+          screenSharingTrack.onended = () => {
+            endShareScreen();
+          };
         })
         .catch((e) => {
           console.log(e);
@@ -70,37 +84,25 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
           // setVideo(false);
         });
     } else if (screenSharing && clientStream) {
-      console.log(clientStream.getTracks());
-      navigator.mediaDevices
-        .getUserMedia({
-          audio: true,
-          video: true,
-        })
-        .then((vedioStream) => {
-          setAyhamStream(vedioStream);
-          // setClientStream(vedioStream);
-          userVideo.current.srcObject = vedioStream;
-          const vedioStreamTrack = vedioStream.getVideoTracks()[0];
-
-          peers?.forEach((peer) => {
-            const sender = peer
-              .getSenders()
-              .find((s) => s.track.kind === "video");
-            console.log(peer.streams);
-            console.log(clientStream);
-            sender.replaceTrack(vedioStreamTrack);
-          });
-          clientStream = vedioStream;
-          state.getTracks().forEach((track) => track.stop());
-          console.log(clientStream.getTracks());
-          setScreenSharing(false);
-        })
-        .catch((e) => {
-          console.log(e);
-          setMute(true);
-          setVideo(true);
-        });
+      endShareScreen();
     }
+  };
+
+  const endShareScreen = () => {
+    console.log(clientStream.getTracks());
+
+    userVideo.current.srcObject = clientStream;
+
+    const vedioStreamTrack = clientStream.getVideoTracks()[0];
+
+    peers?.forEach((peer) => {
+      const sender = peer.getSenders().find((s) => s.track.kind === "video");
+      console.log(peer.streams);
+      console.log(clientStream);
+      sender.replaceTrack(vedioStreamTrack);
+    });
+    state?.getTracks().forEach((track) => track.stop());
+    setScreenSharing(false);
   };
 
   useEffect(() => {
@@ -128,26 +130,32 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
       />
 
       {!video && <img src={img} className={styles.alt} />}
-
       <div className={styles.acitons}>
-        <FontAwesomeIcon
-          onClick={() => setMute(!mute)}
-          className={`${styles.icon} ${!mute && styles.danger}`}
-          icon={faMicrophoneSlash}
-        />
-        <FontAwesomeIcon
-          onClick={() => setVideo(!video)}
-          className={`${styles.icon} ${!video && styles.danger}`}
-          icon={faVideoSlash}
-        />
-        {!isMobileDevice() && (
+        <Button type="text" className={styles.button}>
           <FontAwesomeIcon
-            onClick={() => setShareScreen()}
-            className={`${styles.icon} ${screenSharing && styles.active}`}
-            icon={faDesktop}
+            onClick={() => setMute(!mute)}
+            className={`${styles.icon} ${!mute && styles.danger}`}
+            icon={faMicrophoneSlash}
           />
+        </Button>
+        <Button type="text" className={styles.button}>
+          <FontAwesomeIcon
+            onClick={() => setVideo(!video)}
+            className={`${styles.icon} ${!video && styles.danger}`}
+            icon={faVideoSlash}
+          />
+        </Button>
+        {!isMobileDevice() && (
+          <Button type="text" className={styles.button}>
+            <FontAwesomeIcon
+              onClick={() => setShareScreen()}
+              className={`${styles.icon} ${screenSharing && styles.active}`}
+              icon={faDesktop}
+            />
+          </Button>
         )}
       </div>
+      <SoundVolumeMeter mediaStream={clientStream} />
     </div>
   );
 }
