@@ -9,6 +9,7 @@ import img from "../assets/test.png";
 import styles from "./styles.module.css";
 import { isMobileDevice } from "../helpers/isMobileDevice";
 import { Button } from "antd";
+import SoundVolumeMeter from "./SoundMeter";
 function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
   const [video, setVideo] = useState(false);
   const [mute, setMute] = useState(false);
@@ -154,6 +155,7 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
           </Button>
         )}
       </div>
+      <SoundVolumeMeter mediaStream={clientStream} />
     </div>
   );
 }
