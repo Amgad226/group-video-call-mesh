@@ -12,6 +12,8 @@ import { Button, Tag } from "antd";
 import SoundVolumeMeter from "./SoundMeter";
 
 function ClientVideo({
+  forceMuted,
+  forceVideoStoped,
   userVideo,
   peers,
   clientStream,
@@ -19,16 +21,24 @@ function ClientVideo({
   isAdmin,
 }) {
   const [video, setVideo] = useState(false);
-  const [mute, setMute] = useState(false);
+  const [unMute, setUnMute] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
   const [state, setState] = useState();
   const [initDone, setInitDone] = useState(false);
 
   useEffect(() => {
+    setUnMute(!forceMuted && unMute);
+  }, [forceMuted]);
+
+  useEffect(() => {
+    setVideo(!forceVideoStoped && video);
+  }, [forceVideoStoped]);
+
+  useEffect(() => {
     if (clientStream && !initDone) {
       setInitDone(true);
       setVideo(!!clientStream.getVideoTracks()[0]?.enabled);
-      setMute(!!clientStream.getAudioTracks()[0]?.enabled);
+      setUnMute(!!clientStream.getAudioTracks()[0]?.enabled);
     }
   }, [clientStream]);
 
@@ -44,12 +54,12 @@ function ClientVideo({
   }, [video]);
 
   useEffect(() => {
-    if (!mute && clientStream) {
+    if (!unMute && clientStream) {
       clientStream.getAudioTracks().forEach((track) => (track.enabled = false));
     } else {
       clientStream?.getAudioTracks().forEach((track) => (track.enabled = true));
     }
-  }, [mute]);
+  }, [unMute]);
 
   const setShareScreen = () => {
     if (!screenSharing && clientStream) {
@@ -147,24 +157,51 @@ function ClientVideo({
 
       {!video && <img src={img} className={styles.alt} />}
       <div className={styles.acitons}>
-        <Button type="text" className={styles.button}>
+        <Button
+          style={{
+            opacity: forceMuted ? 0.5 : 1,
+          }}
+          type="text"
+          disabled={forceMuted}
+          className={styles.button}
+        >
           <FontAwesomeIcon
-            onClick={() => setMute(!mute)}
-            className={`${styles.icon} ${!mute && styles.danger}`}
+            onClick={() => {
+              if (!forceMuted) setUnMute(!unMute);
+            }}
+            className={`${styles.icon} ${!unMute && styles.danger}`}
             icon={faMicrophoneSlash}
           />
         </Button>
-        <Button type="text" className={styles.button}>
+        <Button
+          type="text"
+          disabled={forceVideoStoped}
+          className={styles.button}
+          style={{
+            opacity: forceVideoStoped ? 0.5 : 1,
+          }}
+        >
           <FontAwesomeIcon
-            onClick={() => setVideo(!video)}
+            onClick={() => {
+              if (!forceVideoStoped) setVideo(!video);
+            }}
             className={`${styles.icon} ${!video && styles.danger}`}
             icon={faVideoSlash}
           />
         </Button>
         {!isMobileDevice() && (
-          <Button type="text" className={styles.button}>
+          <Button
+            disabled={forceVideoStoped}
+            type="text"
+            className={styles.button}
+            style={{
+              opacity: forceVideoStoped ? 0.5 : 1,
+            }}
+          >
             <FontAwesomeIcon
-              onClick={() => setShareScreen()}
+              onClick={() => {
+                if (!forceVideoStoped) setShareScreen();
+              }}
               className={`${styles.icon} ${screenSharing && styles.active}`}
               icon={faDesktop}
             />

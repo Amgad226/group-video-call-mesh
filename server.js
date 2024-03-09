@@ -16,6 +16,7 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
+  
   socket.on("join room", (roomID) => {
     console.log("join room", socket.id);
     if (users[roomID]) {
@@ -71,7 +72,7 @@ io.on("connection", (socket) => {
       room = room.filter((peer) => peer.id !== socket.id);
       users[roomID] = room;
     }
-    if (users[roomID].length > 0) {
+    if (users[roomID]?.length > 0) {
       const usersInThisRoom = users[roomID]?.filter(
         (peer) => peer.id !== socket.id
       );
@@ -89,36 +90,125 @@ io.on("connection", (socket) => {
   socket.on("kick-out", (userID) => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const user = room.find((peer) => peer.id === socket.id);
-    console.log("kick-out by", user);
-
-    if (user.isAdmin) {
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("kick-out by", caller);
+    if (caller.isAdmin) {
       console.log("force-leave for", userID);
-      // if (room) {
-      //   room = room.filter((peer) => peer.id !== userID);
-      //   users[roomID] = room;
-      // }
-
       io.to(userID).emit("force-leave");
     }
-    // payload : {userToSignal , candidate}
   });
   socket.on("end-call", () => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const user = room.find((peer) => peer.id === socket.id);
-    console.log("end-call", user);
-    if (user.isAdmin) {
-      // if (room) {
-      //   room = room.filter((peer) => peer.id !== userID);
-      //   users[roomID] = room;
-      // }
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("end-call", caller);
+    if (caller.isAdmin) {
       room?.forEach((peer) => {
         console.log("force-leave for", peer);
         io.to(peer.id).emit("force-leave");
       });
     }
+  });
+
+  socket.on("mute-user", (userID) => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("mute by", caller);
+
+    if (caller.isAdmin) {
+      console.log("force-mute for", userID);
+      io.to(userID).emit("force-mute");
+    }
+  });
+  socket.on("unmute-user", (userID) => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("unmute by", caller);
+
+    if (caller.isAdmin) {
+      console.log("unmute for", userID);
+      io.to(userID).emit("unmute");
+    }
+  });
+  socket.on("mute-all", () => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("mute-all", caller);
+    if (caller.isAdmin) {
+      room?.forEach((peer) => {
+        console.log("force mute-all for", peer);
+        if (peer.isAdmin != true) io.to(peer.id).emit("force-mute");
+      });
+    }
+  });
+  socket.on("unmute-all", () => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("unmute-all", caller);
+    if (caller.isAdmin) {
+      room?.forEach((peer) => {
+        console.log("unmute-all for", peer);
+        if (peer.isAdmin != true) io.to(peer.id).emit("unmute");
+      });
+    }
+  });
+
+  socket.on("cam-off-user", (userID) => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("mute by", caller);
+
+    if (caller.isAdmin) {
+      console.log("force-cam-off for", userID);
+      // if (room) {
+      //   room = room.filter((peer) => peer.id !== userID);
+      //   users[roomID] = room;
+      // }
+
+      io.to(userID).emit("force-cam-off");
+    }
     // payload : {userToSignal , candidate}
+  });
+  socket.on("cam-on-user", (userID) => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("cam-on by", caller);
+
+    if (caller.isAdmin) {
+      console.log("cam-on for", userID);
+
+      io.to(userID).emit("cam-on");
+    }
+  });
+  socket.on("cam-off-all", () => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("cam-on-all", caller);
+    if (caller.isAdmin) {
+      room?.forEach((peer) => {
+        console.log("unmute-all for", peer);
+        if (peer.isAdmin != true) io.to(peer.id).emit("force-cam-off");
+      });
+    }
+  });
+  socket.on("cam-on-all", () => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room.find((peer) => peer.id === socket.id);
+    console.log("cam-on-all", caller);
+    if (caller.isAdmin) {
+      room?.forEach((peer) => {
+        console.log("unmute-all for", peer);
+        if (peer.isAdmin != true) io.to(peer.id).emit("cam-on");
+      });
+    }
   });
 });
 

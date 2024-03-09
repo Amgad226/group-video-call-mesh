@@ -18,6 +18,11 @@ const Room = () => {
 
   const [peers, setPeers] = useState([]);
   const [iAdmin, setIAdmin] = useState(false);
+  const [forceMuted, setForceMuted] = useState(false);
+  const [forceVideoStoped, setForceVideoStoped] = useState(false);
+  const [adminMuteAll, setAdminMuteAll] = useState(false);
+  const [adminStopCamAll, setAdminStopCamAll] = useState(false);
+
   const history = useHistory();
   const { roomID } = useParams();
 
@@ -25,8 +30,8 @@ const Room = () => {
   const [permissionDenied, setPermissionDenied] = useState();
 
   async function ByForce() {
-    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    socketRef.current = io.connect("http://localhost:3001");
+    socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    // socketRef.current = io.connect("http://localhost:3001");
     navigator.mediaDevices
       .getUserMedia({
         video: (await checkCameraDevices())
@@ -57,7 +62,16 @@ const Room = () => {
         socketRef.current.on("user-leave", handleUserLeave);
 
         socketRef.current.on("force-leave", handleForceLeave);
+
+        socketRef.current.on("force-mute", handleForceMute);
+
+        socketRef.current.on("force-cam-off", handleForceCamOff);
+
+        socketRef.current.on("unmute", handleUnMute);
+
+        socketRef.current.on("cam-on", handleCamOn);
       })
+
       .catch((err) => {
         setPermissionDenied(true);
         console.log(err);
@@ -241,6 +255,34 @@ const Room = () => {
     history.push("/");
   }
 
+  function handleForceMute() {
+    setForceMuted(true);
+    // clientStreamRef.current
+    //   ?.getAudioTracks()
+    //   .forEach((track) => (track.enabled = false));
+  }
+
+  function handleUnMute() {
+    setForceMuted(false);
+    // clientStreamRef.current
+    //   ?.getAudioTracks()
+    //   .forEach((track) => (track.enabled = true));
+  }
+
+  function handleForceCamOff() {
+    setForceVideoStoped(true);
+    // clientStreamRef.current
+    //   ?.getVideoTracks()
+    //   .forEach((track) => (track.enabled = false));
+  }
+
+  function handleCamOn() {
+    setForceVideoStoped(false);
+    // clientStreamRef.current
+    //   ?.getVideoTracks()
+    //   .forEach((track) => (track.enabled = true));
+  }
+
   return (
     <>
       <Modal
@@ -295,16 +337,68 @@ const Room = () => {
             Leave Room
           </Button>
           {iAdmin && (
-            <Button
-              type="primary"
-              size="large"
-              danger
-              onClick={() => {
-                socketRef.current.emit("end-call");
-              }}
-            >
-              End Room For All
-            </Button>
+            <>
+              <Button
+                type="primary"
+                size="large"
+                danger
+                onClick={() => {
+                  socketRef.current.emit("end-call");
+                }}
+              >
+                End Room For All
+              </Button>
+              {adminMuteAll && (
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={() => {
+                    setAdminMuteAll(false);
+                    socketRef.current.emit("unmute-all");
+                  }}
+                >
+                  Enable Talk
+                </Button>
+              )}
+              {!adminMuteAll && (
+                <Button
+                  type="primary"
+                  size="large"
+                  danger
+                  onClick={() => {
+                    setAdminMuteAll(true);
+                    socketRef.current.emit("mute-all");
+                  }}
+                >
+                  Disable Talk
+                </Button>
+              )}
+              {adminStopCamAll && (
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={() => {
+                    setAdminStopCamAll(false);
+                    socketRef.current.emit("cam-on-all");
+                  }}
+                >
+                  Enable Video
+                </Button>
+              )}
+              {!adminStopCamAll && (
+                <Button
+                  type="primary"
+                  size="large"
+                  danger
+                  onClick={() => {
+                    setAdminStopCamAll(true);
+                    socketRef.current.emit("cam-off-all");
+                  }}
+                >
+                  Disable Video
+                </Button>
+              )}
+            </>
           )}
         </Space>
         <Container>
@@ -315,6 +409,8 @@ const Room = () => {
             userVideo={userVideo}
             peers={peers}
             isAdmin={iAdmin}
+            forceMuted={forceMuted}
+            forceVideoStoped={forceVideoStoped}
           />
           {peers.map((peer, index) => {
             return (

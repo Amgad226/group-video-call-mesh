@@ -10,6 +10,8 @@ import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 const Video = ({ peerObj, iAdmin, id, socket, ...restProps }) => {
   const ref = useRef();
   const [forSoundTrackStream, setforSoundTrackStream] = useState();
+  const [forceMuted, setForceMuted] = useState(false);
+  const [forceVideoStoped, setForceVideoStoped] = useState(false);
 
   useEffect(() => {
     console.log(peerObj);
@@ -53,15 +55,60 @@ const Video = ({ peerObj, iAdmin, id, socket, ...restProps }) => {
           >
             Kick-Out
           </Button>
-          <Button block type="dashed" danger>
-            Mute
-          </Button>
-          <Button block type="dashed" danger>
-            Stop Video
-          </Button>
+          {!forceMuted && (
+            <Button
+              onClick={() => {
+                setForceMuted(true);
+                socket.emit("mute-user", id);
+              }}
+              block
+              type="dashed"
+              danger
+            >
+              Mute
+            </Button>
+          )}
+          {forceMuted && (
+            <Button
+              onClick={() => {
+                setForceMuted(false);
+                socket.emit("unmute-user", id);
+              }}
+              block
+              type="dashed"
+            >
+              unMute
+            </Button>
+          )}
+          {!forceVideoStoped && (
+            <Button
+              onClick={() => {
+                setForceVideoStoped(true);
+                socket.emit("cam-off-user", id);
+              }}
+              block
+              type="dashed"
+              danger
+            >
+              Stop Video
+            </Button>
+          )}
+          {forceVideoStoped && (
+            <Button
+              onClick={() => {
+                setForceVideoStoped(false);
+                socket.emit("cam-on-user", id);
+              }}
+              block
+              type="primary"
+            >
+              Enable Video
+            </Button>
+          )}
         </>
       )}
       <Button
+        block
         onClick={() => {
           requestFullScreen();
         }}
