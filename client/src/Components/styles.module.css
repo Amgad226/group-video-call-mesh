@@ -4,9 +4,10 @@
   height: 300px;
   overflow: hidden;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   flex-direction: column;
+
   border-radius: 10px;
 }
 .video {
@@ -59,10 +60,26 @@
 }
 
 .peerVideo {
-  cursor: pointer;
+  /* cursor: pointer; */
   transition: all 250ms;
 }
 .peerVideo:hover {
   transition: all 250ms;
   border-radius: 30px;
+}
+.tagContainer {
+  position: relative;
+  display: flex;
+  justify-content: end;
+  /* flex-direction: row-reverse; */
+  align-items: center;
+  margin: 5px;
+  height: 40px;
+  width: 95%;
+  gap: 10px;
+  /* background-color: red; */
+}
+.tag {
+  position: relative;
+  z-index: 1;
 }

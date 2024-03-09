@@ -8,7 +8,7 @@ import { iceConfig } from "../config/iceConfig";
 import { checkCameraDevices } from "../helpers/checkCameraDevice";
 import { checkAudioDevices } from "../helpers/checkAudioDevices";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import { Button, Modal } from "antd";
+import { Button, Modal, Space } from "antd";
 
 const Room = () => {
   const socketRef = useRef();
@@ -17,6 +17,7 @@ const Room = () => {
   const peersRef = useRef([]); // was a single peer
 
   const [peers, setPeers] = useState([]);
+  const [iAdmin, setIAdmin] = useState(false);
   const history = useHistory();
   const { roomID } = useParams();
 
@@ -24,8 +25,8 @@ const Room = () => {
   const [permissionDenied, setPermissionDenied] = useState();
 
   async function ByForce() {
-    socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    // socketRef.current = io.connect("http://localhost:3001");
+    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    socketRef.current = io.connect("http://localhost:3001");
     navigator.mediaDevices
       .getUserMedia({
         video: (await checkCameraDevices())
@@ -55,6 +56,7 @@ const Room = () => {
 
         socketRef.current.on("user-leave", handleUserLeave);
 
+        socketRef.current.on("force-leave", handleForceLeave);
       })
       .catch((err) => {
         setPermissionDenied(true);
@@ -91,6 +93,7 @@ const Room = () => {
   }
 
   function handleRecieveCall(incoming) {
+    console.log(incoming);
     const peer = createPeer(incoming.callerID, false);
     const desc = new RTCSessionDescription(incoming.signal);
     peer
@@ -117,8 +120,9 @@ const Room = () => {
     peersRef.current.push({
       peerID: incoming.callerID,
       peer,
+      isAdmin: incoming.isAdmin,
     });
-    setPeers((peers) => [...peers, peer]);
+    setPeers((peers) => [...peers, { isAdmin: incoming.isAdmin, peer }]);
   }
 
   function handleAnswer(message) {
@@ -185,20 +189,25 @@ const Room = () => {
   }
 
   function handleAllUsersEvent(users) {
+    console.log(users);
     const peers = [];
-    users.forEach((userID) => {
+    if (users.length === 0) {
+      setIAdmin(true);
+    }
+    users.forEach((remotePeer) => {
       //user id is the old socket_id already in room
       const peer = callUser(
-        userID, // the old user socket id
+        remotePeer.id, // the old user socket id
         socketRef.current.id, // new user socket id
         clientStreamRef.current // stream for new user
       );
       // the peer is the peer of the new user
       peersRef.current.push({
-        peerID: userID,
+        peerID: remotePeer.id,
+        isAdmin: remotePeer.isAdmin,
         peer,
       });
-      peers.push(peer);
+      peers.push({ isAdmin: remotePeer.isAdmin, peer });
     });
     setPeers(peers);
   }
@@ -212,8 +221,24 @@ const Room = () => {
     console.log(userID);
     console.log("removedPeer", removedPeer);
     console.log("newPeers", newPeers);
+    removedPeer[0]?.peer.close();
     peersRef.current = newPeers;
-    setPeers(peersRef.current.map((peer) => peer.peer));
+    setPeers(
+      peersRef.current.map(({ peer, isAdmin }) => {
+        return {
+          peer,
+          isAdmin,
+        };
+      })
+    );
+  }
+
+  function handleForceLeave() {
+    clientStreamRef.current?.getTracks()?.forEach((track) => {
+      console.log(track);
+      track.stop();
+    });
+    history.push("/");
   }
 
   return (
@@ -246,7 +271,7 @@ const Room = () => {
           padding: 10,
         }}
       >
-        <div
+        <Space
           style={{
             width: "100%",
             height: "50px",
@@ -258,7 +283,7 @@ const Room = () => {
           <Button
             size="large"
             danger
-            type="primary"
+            type="default"
             onClick={() => {
               history.push("/");
               clientStreamRef.current?.getTracks()?.forEach((track) => {
@@ -269,7 +294,19 @@ const Room = () => {
           >
             Leave Room
           </Button>
-        </div>
+          {iAdmin && (
+            <Button
+              type="primary"
+              size="large"
+              danger
+              onClick={() => {
+                socketRef.current.emit("end-call");
+              }}
+            >
+              End Room For All
+            </Button>
+          )}
+        </Space>
         <Container>
           <ClientVideo
             ayhamStram={ayhamStram}
@@ -277,9 +314,18 @@ const Room = () => {
             clientStream={clientStreamRef.current}
             userVideo={userVideo}
             peers={peers}
+            isAdmin={iAdmin}
           />
           {peers.map((peer, index) => {
-            return <Video key={peersRef.current[index].peerID} peer={peer} />;
+            return (
+              <Video
+                id={peersRef.current[index].peerID}
+                key={peersRef.current[index].peerID}
+                peerObj={peer}
+                iAdmin={iAdmin}
+                socket={socketRef.current}
+              />
+            );
           })}
         </Container>
       </div>

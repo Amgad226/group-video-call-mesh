@@ -8,9 +8,16 @@ import React, { useEffect, useState } from "react";
 import img from "../assets/test.png";
 import styles from "./styles.module.css";
 import { isMobileDevice } from "../helpers/isMobileDevice";
-import { Button } from "antd";
+import { Button, Tag } from "antd";
 import SoundVolumeMeter from "./SoundMeter";
-function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
+
+function ClientVideo({
+  userVideo,
+  peers,
+  clientStream,
+  setAyhamStream,
+  isAdmin,
+}) {
   const [video, setVideo] = useState(false);
   const [mute, setMute] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
@@ -57,8 +64,8 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
           // setClientStream(shareStreem);
           userVideo.current.srcObject = shareStreem;
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
-          peers?.forEach((peer) => {
-            const sender = peer
+          peers?.forEach((peerObj) => {
+            const sender = peerObj.peer
               .getSenders()
               .find((s) => s?.track?.kind === "video");
 
@@ -66,7 +73,7 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
             if (sender) {
               sender.replaceTrack(screenSharingTrack);
             } else {
-              peer.addTrack(screenSharingTrack, clientStream);
+              peerObj.peer.addTrack(screenSharingTrack, clientStream);
             }
           });
           // clientStream = shareStreem;
@@ -95,9 +102,11 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
 
     const vedioStreamTrack = clientStream.getVideoTracks()[0];
 
-    peers?.forEach((peer) => {
-      const sender = peer.getSenders().find((s) => s.track.kind === "video");
-      console.log(peer.streams);
+    peers?.forEach((peerObj) => {
+      const sender = peerObj.peer
+        .getSenders()
+        .find((s) => s.track.kind === "video");
+      console.log(peerObj.peer.streams);
       console.log(clientStream);
       sender.replaceTrack(vedioStreamTrack);
     });
@@ -113,6 +122,13 @@ function ClientVideo({ userVideo, peers, clientStream, setAyhamStream }) {
 
   return (
     <div className={styles.videoFrame}>
+      {isAdmin && (
+        <div className={styles.tagContainer}>
+          <Tag className={styles.tag} color="#f50">
+            Admin
+          </Tag>
+        </div>
+      )}
       <video
         className={styles.video}
         src={img}
