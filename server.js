@@ -11,7 +11,7 @@ const socketToRoom = {};
 
 app.get("/", (req, res) => {
   return res.json({
-    message: " mesh server code ",
+    message: "A**mesh server code**A ",
   });
 });
 
