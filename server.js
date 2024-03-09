@@ -27,6 +27,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("offer", (payload) => {
+    // payload : {userToSignal , signal {same sdb} ,callerID}
     console.log("offer");
     io.to(payload.userToSignal).emit("offer", {
       signal: payload.signal, //new user SDP
@@ -35,6 +36,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("answer", (payload) => {
+    // payload : {userToSignal , signal {same sdb} ,callerID}
     console.log("answer");
     io.to(payload.userToSignal).emit("answer", {
       signal: payload.signal,
@@ -43,6 +45,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("ice-candidate", (payload) => {
+    // payload : {userToSignal , candidate}
     console.log("ice-candidate");
     io.to(payload.userToSignal).emit("ice-candidate", {
       candidate: payload.candidate,
@@ -61,6 +64,7 @@ io.on("connection", (socket) => {
     }
     const usersInThisRoom = users[roomID].filter((id) => id !== socket.id);
     console.log(usersInThisRoom);
+    
     usersInThisRoom?.forEach((userId) => {
       io.to(userId).emit("user-leave", socket.id);
     });
