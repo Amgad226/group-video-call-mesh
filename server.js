@@ -11,12 +11,11 @@ const socketToRoom = {};
 
 app.get("/", (req, res) => {
   return res.json({
-    message: "MWXX mesh server code XXWM",
+    message: " mesh server code ",
   });
 });
 
 io.on("connection", (socket) => {
-  
   socket.on("join room", (roomID) => {
     console.log("join room", socket.id);
     if (users[roomID]) {
