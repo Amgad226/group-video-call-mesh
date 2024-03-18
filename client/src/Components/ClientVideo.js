@@ -171,7 +171,7 @@ function ClientVideo({
               height: window.innerHeight / 2,
               width: window.innerWidth / 2,
             },
-            audio: checkAudioDevices(),
+            audio: true,
           })
             .then(newStream => {
               clientStreamRef.current = newStream;
