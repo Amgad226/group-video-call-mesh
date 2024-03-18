@@ -1,5 +1,6 @@
 import {
   faDesktop,
+  faCamera,
   faMicrophoneSlash,
   faVideoSlash,
 } from "@fortawesome/free-solid-svg-icons";
@@ -10,6 +11,7 @@ import styles from "./styles.module.css";
 import { isMobileDevice } from "../helpers/isMobileDevice";
 import { Button, Tag } from "antd";
 import SoundVolumeMeter from "./SoundMeter";
+import { checkAudioDevices } from "../helpers/checkAudioDevices";
 
 function ClientVideo({
   forceMuted,
@@ -25,6 +27,7 @@ function ClientVideo({
   const [screenSharing, setScreenSharing] = useState(false);
   const [state, setState] = useState();
   const [initDone, setInitDone] = useState(false);
+  const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
 
   useEffect(() => {
     setUnMute(!forceMuted && unMute);
@@ -130,6 +133,92 @@ function ClientVideo({
     };
   }, [state]);
 
+
+
+  function checkMultiCamera() {
+    return navigator.mediaDevices.enumerateDevices()
+      .then(devices => {
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        return ((videoDevices.length > 1));
+      })
+      .catch(error => {
+        return (false);
+      });
+  }
+  function switchCamera() {
+    navigator.mediaDevices.enumerateDevices()
+      .then(devices => {
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        // console.log({ "devices": videoDevices })
+        // console.log(clientStreamRef.current.getVideoTracks()[0].getSettings())
+        const currentDeviceId = clientStreamRef.current.getVideoTracks()[0].getSettings().deviceId;
+        console.log({ "currentDeviceId": currentDeviceId })
+        let newDeviceId;
+
+        for (let i = 0; i < videoDevices.length; i++) {
+          if (videoDevices[i].deviceId !== currentDeviceId) {
+            newDeviceId = videoDevices[i].deviceId;
+            break;
+          }
+        }
+
+        if (newDeviceId) {
+          clientStreamRef.current.getTracks().forEach(track => track.stop());
+
+          navigator.mediaDevices.getUserMedia({
+            video: {
+              deviceId: { exact: newDeviceId },
+              height: window.innerHeight / 2,
+              width: window.innerWidth / 2,
+            },
+            audio: checkAudioDevices(),
+          })
+            .then(newStream => {
+              clientStreamRef.current = newStream;
+              userVideo.current.srcObject = newStream;
+              // console.log({ "stream": newStream })
+              // console.log({ "newStream.getVideoTracks()": newStream.getVideoTracks() })
+              setAyhamStream(newStream);
+              const newCameraTrack = newStream.getVideoTracks()[0];
+              peers?.forEach((peerObj) => {
+                const sender = peerObj.peer
+                  .getSenders()
+                  .find((s) => s?.track?.kind === "video");
+
+                // console.log(sender);
+                if (sender) {
+                  sender.replaceTrack(newCameraTrack);
+                } else {
+                  peerObj.peer.addTrack(newCameraTrack, newStream);
+                }
+              });
+            })
+
+            .catch(error => {
+              console.error('Error accessing new camera:', error);
+            });
+        } else {
+          console.log('No other camera found.');
+        }
+      })
+      .catch(error => {
+        console.error('Error enumerating devices:', error);
+      });
+  }
+
+
+  useEffect(() => {
+    checkMultiCamera()
+      .then(result => {
+        setHasMultipleCameras(result);
+      })
+      .catch(error => {
+        console.error('Error checking multiple cameras:', error);
+      });
+  }, []);
+
+  // )}
+
   return (
     <div className={styles.videoFrame}>
       {isAdmin && (
@@ -157,7 +246,9 @@ function ClientVideo({
 
       {!video && <img src={img} className={styles.alt} />}
       <div className={styles.acitons}>
+
         <Button
+
           style={{
             opacity: forceMuted ? 0.5 : 1,
           }}
@@ -207,6 +298,10 @@ function ClientVideo({
             />
           </Button>
         )}
+        {hasMultipleCameras && (
+          <button onClick={switchCamera}>
+            <FontAwesomeIcon icon={faCamera} />
+          </button>)}
       </div>
       <SoundVolumeMeter mediaStream={clientStreamRef.current} />
     </div>
