@@ -16,7 +16,7 @@ function ClientVideo({
   forceVideoStoped,
   userVideo,
   peers,
-  clientStream,
+  clientStreamRef,
   setAyhamStream,
   isAdmin,
 }) {
@@ -35,34 +35,34 @@ function ClientVideo({
   }, [forceVideoStoped]);
 
   useEffect(() => {
-    if (clientStream && !initDone) {
+    if (clientStreamRef.current && !initDone) {
       setInitDone(true);
-      setVideo(!!clientStream.getVideoTracks()[0]?.enabled);
-      setUnMute(!!clientStream.getAudioTracks()[0]?.enabled);
+      setVideo(!!clientStreamRef.current.getVideoTracks()[0]?.enabled);
+      setUnMute(!!clientStreamRef.current.getAudioTracks()[0]?.enabled);
     }
-  }, [clientStream]);
+  }, [clientStreamRef.current]);
 
   useEffect(() => {
-    if (!video && clientStream) {
-      console.log(clientStream.getVideoTracks());
-      clientStream.getVideoTracks().forEach((track) => (track.enabled = false));
+    if (!video && clientStreamRef.current) {
+      console.log(clientStreamRef.current.getVideoTracks());
+      clientStreamRef.current.getVideoTracks().forEach((track) => (track.enabled = false));
       state?.getTracks().forEach((track) => (track.enabled = false));
     } else {
-      clientStream?.getVideoTracks().forEach((track) => (track.enabled = true));
+      clientStreamRef.current?.getVideoTracks().forEach((track) => (track.enabled = true));
       state?.getTracks().forEach((track) => (track.enabled = true));
     }
   }, [video]);
 
   useEffect(() => {
-    if (!unMute && clientStream) {
-      clientStream.getAudioTracks().forEach((track) => (track.enabled = false));
+    if (!unMute && clientStreamRef.current) {
+      clientStreamRef.current.getAudioTracks().forEach((track) => (track.enabled = false));
     } else {
-      clientStream?.getAudioTracks().forEach((track) => (track.enabled = true));
+      clientStreamRef.current?.getAudioTracks().forEach((track) => (track.enabled = true));
     }
   }, [unMute]);
 
   const setShareScreen = () => {
-    if (!screenSharing && clientStream) {
+    if (!screenSharing && clientStreamRef.current) {
       navigator.mediaDevices
         .getDisplayMedia({
           audio: true,
@@ -70,7 +70,7 @@ function ClientVideo({
         })
         .then((shareStreem) => {
           setAyhamStream(shareStreem);
-          console.log(clientStream.getTracks());
+          console.log(clientStreamRef.current.getTracks());
           // setClientStream(shareStreem);
           userVideo.current.srcObject = shareStreem;
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
@@ -83,12 +83,12 @@ function ClientVideo({
             if (sender) {
               sender.replaceTrack(screenSharingTrack);
             } else {
-              peerObj.peer.addTrack(screenSharingTrack, clientStream);
+              peerObj.peer.addTrack(screenSharingTrack, clientStreamRef.current);
             }
           });
-          // clientStream = shareStreem;
+          // clientStreamRef.current = shareStreem;
           setState(shareStreem);
-          console.log("clientStream ref", clientStream.getTracks());
+          console.log("clientStreamRef.current ref", clientStreamRef.current.getTracks());
           setScreenSharing(true);
           setVideo(true);
           screenSharingTrack.onended = () => {
@@ -100,24 +100,24 @@ function ClientVideo({
           // setMute(false);
           // setVideo(false);
         });
-    } else if (screenSharing && clientStream) {
+    } else if (screenSharing && clientStreamRef.current) {
       endShareScreen();
     }
   };
 
   const endShareScreen = () => {
-    console.log(clientStream.getTracks());
+    console.log(clientStreamRef.current.getTracks());
 
-    userVideo.current.srcObject = clientStream;
+    userVideo.current.srcObject = clientStreamRef.current;
 
-    const vedioStreamTrack = clientStream.getVideoTracks()[0];
+    const vedioStreamTrack = clientStreamRef.current.getVideoTracks()[0];
 
     peers?.forEach((peerObj) => {
       const sender = peerObj.peer
         .getSenders()
         .find((s) => s.track.kind === "video");
       console.log(peerObj.peer.streams);
-      console.log(clientStream);
+      console.log(clientStreamRef.current);
       sender.replaceTrack(vedioStreamTrack);
     });
     state?.getTracks().forEach((track) => track.stop());
@@ -149,8 +149,8 @@ function ClientVideo({
         style={
           !screenSharing
             ? {
-                transform: "scaleX(-1)",
-              }
+              transform: "scaleX(-1)",
+            }
             : {}
         }
       />
@@ -208,7 +208,7 @@ function ClientVideo({
           </Button>
         )}
       </div>
-      <SoundVolumeMeter mediaStream={clientStream} />
+      <SoundVolumeMeter mediaStream={clientStreamRef.current} />
     </div>
   );
 }

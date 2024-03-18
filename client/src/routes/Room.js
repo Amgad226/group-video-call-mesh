@@ -405,7 +405,7 @@ const Room = () => {
           <ClientVideo
             ayhamStram={ayhamStram}
             setAyhamStream={setAyhamStream}
-            clientStream={clientStreamRef.current}
+            clientStreamRef={clientStreamRef}
             userVideo={userVideo}
             peers={peers}
             isAdmin={iAdmin}
