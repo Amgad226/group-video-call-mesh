@@ -112,7 +112,7 @@ io.on("connection", (socket) => {
   socket.on("mute-user", (userID) => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("mute by", caller);
 
     if (caller.isAdmin) {
@@ -123,7 +123,7 @@ io.on("connection", (socket) => {
   socket.on("unmute-user", (userID) => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("unmute by", caller);
 
     if (caller.isAdmin) {
@@ -134,7 +134,7 @@ io.on("connection", (socket) => {
   socket.on("mute-all", () => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("mute-all", caller);
     if (caller.isAdmin) {
       room?.forEach((peer) => {
@@ -146,7 +146,7 @@ io.on("connection", (socket) => {
   socket.on("unmute-all", () => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("unmute-all", caller);
     if (caller.isAdmin) {
       room?.forEach((peer) => {
@@ -159,7 +159,7 @@ io.on("connection", (socket) => {
   socket.on("cam-off-user", (userID) => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("mute by", caller);
 
     if (caller.isAdmin) {
@@ -176,7 +176,7 @@ io.on("connection", (socket) => {
   socket.on("cam-on-user", (userID) => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("cam-on by", caller);
 
     if (caller.isAdmin) {
@@ -188,7 +188,7 @@ io.on("connection", (socket) => {
   socket.on("cam-off-all", () => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("cam-on-all", caller);
     if (caller.isAdmin) {
       room?.forEach((peer) => {
@@ -200,7 +200,7 @@ io.on("connection", (socket) => {
   socket.on("cam-on-all", () => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("cam-on-all", caller);
     if (caller.isAdmin) {
       room?.forEach((peer) => {
