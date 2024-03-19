@@ -76,6 +76,7 @@ function ClientVideo({
           console.log(clientStreamRef.current.getTracks());
           // setClientStream(shareStreem);
           userVideo.current.srcObject = shareStreem;
+          clientStreamRef.current = shareStreem
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
           peers?.forEach((peerObj) => {
             const sender = peerObj.peer
@@ -135,7 +136,7 @@ function ClientVideo({
 
 
 
-  function checkMultiCamera() {
+  const checkMultiCamera = () => {
     return navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
@@ -145,56 +146,35 @@ function ClientVideo({
         return (false);
       });
   }
-  function switchCamera() {
+  // TODO must create another function to get all devices by type (audio,video) then pass the deviceId to this function to use the new device stream instead of current stream   
+  // TODO must change functions names and improve the code
+  const switchCamera = () => {
     navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        // console.log({ "devices": videoDevices })
-        // console.log(clientStreamRef.current.getVideoTracks()[0].getSettings())
         const currentDeviceId = clientStreamRef.current.getVideoTracks()[0].getSettings().deviceId;
-        console.log({ "currentDeviceId": currentDeviceId })
-        let newDeviceId;
-
-        for (let i = 0; i < videoDevices.length; i++) {
-          if (videoDevices[i].deviceId !== currentDeviceId) {
-            newDeviceId = videoDevices[i].deviceId;
-            break;
-          }
-        }
+        const newDeviceId = findNewVideoDeviceId(videoDevices, currentDeviceId);
 
         if (newDeviceId) {
-          clientStreamRef.current.getTracks().forEach(track => track.stop());
+          clientStreamRef.current.getVideoTracks().forEach(track => track.stop());
 
-          navigator.mediaDevices.getUserMedia({
-            video: {
-              deviceId: { exact: newDeviceId },
-              height: window.innerHeight / 2,
-              width: window.innerWidth / 2,
-            },
-            audio: true,
+          getVideoStreamByDeviceId(newDeviceId).then(newStream => {
+
+            userVideo.current.srcObject = newStream;
+            clientStreamRef.current = newStream;
+
+            setAyhamStream(newStream);
+
+            peers?.forEach((peerObj) => {
+              const senderV = peerObj.peer
+                .getSenders()
+                .find((s) => s?.track?.kind === "video");
+              senderV.replaceTrack(newStream.getVideoTracks()[0]);
+            });
           })
-            .then(newStream => {
-              clientStreamRef.current = newStream;
-              userVideo.current.srcObject = newStream;
-              // console.log({ "stream": newStream })
-              // console.log({ "newStream.getVideoTracks()": newStream.getVideoTracks() })
-              setAyhamStream(newStream);
-              const newCameraTrack = newStream.getVideoTracks()[0];
-              peers?.forEach((peerObj) => {
-                const sender = peerObj.peer
-                  .getSenders()
-                  .find((s) => s?.track?.kind === "video");
-
-                // console.log(sender);
-                if (sender) {
-                  sender.replaceTrack(newCameraTrack);
-                } else {
-                  peerObj.peer.addTrack(newCameraTrack, newStream);
-                }
-              });
-            })
 
             .catch(error => {
+              alert("can not swatch camera")
               console.error('Error accessing new camera:', error);
             });
         } else {
@@ -206,7 +186,24 @@ function ClientVideo({
       });
   }
 
-
+  const findNewVideoDeviceId = (videoDevices, currentDeviceId) => {
+    for (let i = 0; i < videoDevices.length; i++) {
+      if (videoDevices[i].deviceId !== currentDeviceId) {
+        return videoDevices[i].deviceId;
+      }
+    }
+    return false;
+  };
+  const getVideoStreamByDeviceId = (deviceId) => {
+    return navigator.mediaDevices.getUserMedia({
+      video: {
+        deviceId: { exact: deviceId },
+        height: window.innerHeight / 2,
+        width: window.innerWidth / 2,
+      },
+      audio: true
+    })
+  }
   useEffect(() => {
     checkMultiCamera()
       .then(result => {
