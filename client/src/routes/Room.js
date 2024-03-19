@@ -29,6 +29,9 @@ const Room = () => {
   const [ayhamStram, setAyhamStream] = useState();
   const [permissionDenied, setPermissionDenied] = useState();
 
+  const [activeVideoDevice, setActiveVideoDevice] = useState(null);
+  const [activeAudioDevice, setActiveAudioDevice] = useState(null);
+
   async function ByForce() {
     socketRef.current = io.connect("https://yorkbritishacademy.net/");
     // socketRef.current = io.connect("http://localhost:3001");
@@ -36,14 +39,17 @@ const Room = () => {
       .getUserMedia({
         video: (await checkCameraDevices())
           ? {
-              height: window.innerHeight / 2,
-              width: window.innerWidth / 2,
-            }
+            height: window.innerHeight / 2,
+            width: window.innerWidth / 2,
+          }
           : false,
         audio: await checkAudioDevices(),
       })
       .then((stream) => {
         clientStreamRef.current = stream;
+        setActiveVideoDevice(clientStreamRef.current.getVideoTracks()[0].getSettings().deviceId)
+        setActiveAudioDevice(clientStreamRef.current.getAudioTracks()[0].getSettings().deviceId)
+
         userVideo.current.srcObject = clientStreamRef.current;
 
         setPermissionDenied(false);
@@ -411,6 +417,10 @@ const Room = () => {
             isAdmin={iAdmin}
             forceMuted={forceMuted}
             forceVideoStoped={forceVideoStoped}
+            activeVideoDevice={activeVideoDevice}
+            setActiveVideoDevice={setActiveVideoDevice}
+            activeAudioDevice={activeAudioDevice}
+            setActiveAudioDevice={setActiveAudioDevice}
           />
           {peers.map((peer, index) => {
             return (

@@ -3,6 +3,8 @@ import {
   faCamera,
   faMicrophoneSlash,
   faVideoSlash,
+  faExchangeAlt,
+  faGears,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
@@ -11,8 +13,7 @@ import styles from "./styles.module.css";
 import { isMobileDevice } from "../helpers/isMobileDevice";
 import { Button, Tag } from "antd";
 import SoundVolumeMeter from "./SoundMeter";
-import { checkAudioDevices } from "../helpers/checkAudioDevices";
-
+import DeviceSelectionModal from "./DeviceSelectionModal";
 function ClientVideo({
   forceMuted,
   forceVideoStoped,
@@ -21,13 +22,42 @@ function ClientVideo({
   clientStreamRef,
   setAyhamStream,
   isAdmin,
+  activeVideoDevice, setActiveVideoDevice, activeAudioDevice, setActiveAudioDevice
+
 }) {
+
+  const [showModal, setShowModal] = useState(false);
   const [video, setVideo] = useState(false);
   const [unMute, setUnMute] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
   const [state, setState] = useState();
   const [initDone, setInitDone] = useState(false);
-  const [hasMultipleCameras, setHasMultipleCameras] = useState(false);
+  const [hasMultipleDevices, setHasMultipleDevices] = useState(false);
+  const [devices, setDevices] = useState([]);
+
+  useEffect(() => {
+    const fetchDevices = async () => {
+      try {
+        const mediaDevices = await navigator.mediaDevices.enumerateDevices();
+        const organizedDevices = {};
+        mediaDevices.forEach(device => {
+          const { kind, deviceId, label } = device;
+
+          if (!organizedDevices[kind]) {
+            organizedDevices[kind] = [];
+          }
+          organizedDevices[kind].push({ deviceId, label, kind });
+        });
+
+        setDevices(organizedDevices);
+      } catch (error) {
+        console.error('Error enumerating devices:', error);
+      }
+    };
+
+    fetchDevices();
+  }, []);
+
 
   useEffect(() => {
     setUnMute(!forceMuted && unMute);
@@ -141,54 +171,70 @@ function ClientVideo({
 
 
 
-  const checkMultiCamera = () => {
+  const checkMultiDevices = () => {
     return navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        return ((videoDevices.length > 1));
+        const audioDevices = devices.filter(device => device.kind === 'audioinput');
+        return (videoDevices.length > 1 || audioDevices.length > 1) ? true : false
       })
       .catch(error => {
         return (false);
       });
   }
-  // TODO must create another function to get all devices by type (audio,video) then pass the deviceId to this function to use the new device stream instead of current stream   
-  // TODO must change functions names and improve the code
-  const switchCamera = () => {
-    navigator.mediaDevices.enumerateDevices()
-      .then(devices => {
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        const currentDeviceId = clientStreamRef.current.getVideoTracks()[0].getSettings().deviceId;
-        const newDeviceId = findNewVideoDeviceId(videoDevices, currentDeviceId);
 
-        if (newDeviceId) {
-          clientStreamRef.current.getVideoTracks().forEach(track => track.stop());
+  const switchDevice = (deviceId, kind) => {
 
-          getVideoStreamByDeviceId(newDeviceId).then(newStream => {
+    if (kind == "videoinput") {
 
-            userVideo.current.srcObject = newStream;
-            clientStreamRef.current = newStream;
+      clientStreamRef.current.getVideoTracks().forEach(track => track.stop());
 
-            setAyhamStream(newStream);
+      getVideoStreamByDeviceId(deviceId).then(newStream => {
+        const merge = new MediaStream([...clientStreamRef.current.getAudioTracks(), ...newStream.getVideoTracks()]);
+        newStream = merge
+        userVideo.current.srcObject = newStream;
+        clientStreamRef.current = newStream;
+        setActiveVideoDevice(deviceId)
 
-            peers?.forEach((peerObj) => {
-              const senderV = peerObj.peer
-                .getSenders()
-                .find((s) => s?.track?.kind === "video");
-              senderV.replaceTrack(newStream.getVideoTracks()[0]);
-            });
-          })
+        setAyhamStream(newStream);
 
-            .catch(error => {
-              alert("can not swatch camera")
-              console.error('Error accessing new camera:', error);
-            });
-        } else {
-          console.log('No other camera found.');
-        }
-      })
-      .catch(error => {
-        console.error('Error enumerating devices:', error);
+        peers?.forEach((peerObj) => {
+          const senderV = peerObj.peer
+            .getSenders()
+            .find((s) => s?.track?.kind === "video");
+          senderV.replaceTrack(newStream.getVideoTracks()[0]);
+        });
+      }).catch(error => {
+        alert("can not swatch camera")
+        console.error('Error accessing new camera:', error);
       });
+    } else if (kind == "audioinput") {
+      clientStreamRef.current.getAudioTracks().forEach(track => track.stop());
+      getAudioStreamByDeviceId(deviceId).then(newStream => {
+        const merge = new MediaStream([...clientStreamRef.current.getVideoTracks(), ...newStream.getAudioTracks()]);
+        newStream = merge
+        userVideo.current.srcObject = newStream;
+        clientStreamRef.current = newStream;
+        setActiveAudioDevice(deviceId)
+
+        setAyhamStream(newStream);
+
+        peers?.forEach((peerObj) => {
+          const senderV = peerObj.peer
+            .getSenders()
+            .find((s) => s?.track?.kind === "audio");
+          senderV.replaceTrack(newStream.getAudioTracks()[0]);
+        });
+      }).catch(error => {
+        alert("can not swatch audio device")
+        console.error('Error accessing in switch audio device:', error);
+      });
+    } else {
+      alert("unsupported device kind :" + kind)
+      console.log("unsupported device kind :" + kind)
+    }
+
+
   }
 
   const findNewVideoDeviceId = (videoDevices, currentDeviceId) => {
@@ -209,17 +255,30 @@ function ClientVideo({
       audio: true
     })
   }
+  const getAudioStreamByDeviceId = (deviceId) => {
+    return navigator.mediaDevices.getUserMedia({
+      audio: {
+        deviceId: { exact: deviceId },
+      }
+    })
+  }
   useEffect(() => {
-    checkMultiCamera()
+    checkMultiDevices()
       .then(result => {
-        setHasMultipleCameras(result);
+        setHasMultipleDevices(result);
       })
       .catch(error => {
         console.error('Error checking multiple cameras:', error);
       });
   }, []);
 
-  // )}
+
+  const handleDeviceSelect = (device) => {
+    switchDevice(device.deviceId, device.kind);
+    setShowModal(false)
+  };
+
+
 
   return (
     <div className={styles.videoFrame}>
@@ -300,10 +359,30 @@ function ClientVideo({
             />
           </Button>
         )}
-        {hasMultipleCameras && (
-          <button onClick={switchCamera}>
-            <FontAwesomeIcon icon={faCamera} />
-          </button>)}
+
+        <>
+          {hasMultipleDevices && (
+            <>
+              <div onClick={() => setShowModal(true)}>
+           
+                <FontAwesomeIcon icon={faGears}   className={`${styles.icon} `}/>
+              </div>
+              <DeviceSelectionModal
+                showModal={showModal}
+                setShowModal={setShowModal}
+                handleDeviceSelect={handleDeviceSelect}
+                devices={devices}
+                activeVideoDevice={activeVideoDevice}
+                setActiveVideoDevice={setActiveVideoDevice}
+                activeAudioDevice={activeAudioDevice}
+                setActiveAudioDevice={setActiveAudioDevice}
+              />
+            </>
+          )}
+        </>
+
+
+
       </div>
       <SoundVolumeMeter mediaStream={clientStreamRef.current} />
     </div>
