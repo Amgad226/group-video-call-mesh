@@ -110,22 +110,27 @@ function ClientVideo({
   };
 
   const endShareScreen = () => {
-    console.log(clientStreamRef.current.getTracks());
 
-    userVideo.current.srcObject = clientStreamRef.current;
+    navigator.mediaDevices.getUserMedia({
+      video: {
+        height: window.innerHeight / 2,
+        width: window.innerWidth / 2,
+      },
+      audio: true
+    }).then((stream) => {
+      clientStreamRef.current = stream
+      userVideo.current.srcObject = stream;
 
-    const vedioStreamTrack = clientStreamRef.current.getVideoTracks()[0];
+      peers?.forEach((peerObj) => {
+        const sender = peerObj.peer
+          .getSenders()
+          .find((s) => s.track.kind === "video");
+        sender.replaceTrack(stream.getVideoTracks()[0]);
+      });
+      state?.getTracks().forEach((track) => track.stop());
+      setScreenSharing(false);
+    })
 
-    peers?.forEach((peerObj) => {
-      const sender = peerObj.peer
-        .getSenders()
-        .find((s) => s.track.kind === "video");
-      console.log(peerObj.peer.streams);
-      console.log(clientStreamRef.current);
-      sender.replaceTrack(vedioStreamTrack);
-    });
-    state?.getTracks().forEach((track) => track.stop());
-    setScreenSharing(false);
   };
 
   useEffect(() => {
