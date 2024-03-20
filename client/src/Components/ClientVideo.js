@@ -257,14 +257,6 @@ function ClientVideo({
     }
   };
 
-  const findNewVideoDeviceId = (videoDevices, currentDeviceId) => {
-    for (let i = 0; i < videoDevices.length; i++) {
-      if (videoDevices[i].deviceId !== currentDeviceId) {
-        return videoDevices[i].deviceId;
-      }
-    }
-    return false;
-  };
   const getVideoStreamByDeviceId = (deviceId) => {
     return navigator.mediaDevices.getUserMedia({
       video: {
