@@ -23,7 +23,7 @@ function ClientVideo({
   userVideo,
   peers,
   clientStreamRef,
-  setAyhamStream,
+  shareScreenStreamRef,
   isAdmin,
   activeVideoDevice,
   setActiveVideoDevice,
@@ -78,12 +78,21 @@ function ClientVideo({
 
   useEffect(() => {
     if (!video && clientStreamRef.current) {
-      console.log(clientStreamRef.current.getVideoTracks());
       clientStreamRef.current
         .getVideoTracks()
         .forEach((track) => (track.enabled = false));
-    } else {
+    } else if (video && clientStreamRef.current) {
       clientStreamRef.current
+        ?.getVideoTracks()
+        .forEach((track) => (track.enabled = true));
+    }
+    // to disable the sharescreen if exist
+    if (!video && shareScreenStreamRef.current) {
+      shareScreenStreamRef.current
+        .getVideoTracks()
+        .forEach((track) => (track.enabled = false));
+    } else if (video && shareScreenStreamRef.current) {
+      shareScreenStreamRef.current
         ?.getVideoTracks()
         .forEach((track) => (track.enabled = true));
     }
@@ -94,25 +103,37 @@ function ClientVideo({
       clientStreamRef.current
         .getAudioTracks()
         .forEach((track) => (track.enabled = false));
-    } else {
+    } else if (unMute && clientStreamRef.current) {
       clientStreamRef.current
+        ?.getAudioTracks()
+        .forEach((track) => (track.enabled = true));
+    }
+
+    // to disable the sharescreen if exist
+    if (!unMute && shareScreenStreamRef.current) {
+      shareScreenStreamRef.current
+        .getAudioTracks()
+        .forEach((track) => (track.enabled = false));
+    } else if (unMute && shareScreenStreamRef.current) {
+      shareScreenStreamRef.current
         ?.getAudioTracks()
         .forEach((track) => (track.enabled = true));
     }
   }, [unMute]);
 
   const setShareScreen = () => {
-    if (!screenSharing && clientStreamRef.current) {
+    // to stop any prev share screen tracks if exist
+    if (shareScreenStreamRef.current?.getVideoTracks().length > 0) {
+      shareScreenStreamRef.current.getVideoTracks()[0].stop();
+      shareScreenStreamRef.current = undefined;
+    }
+    if (!screenSharing) {
       navigator.mediaDevices
         .getDisplayMedia({
           audio: true,
           video: true,
         })
         .then((shareStreem) => {
-          setAyhamStream(shareStreem);
-          console.log(clientStreamRef.current.getTracks());
-          userVideo.current.srcObject = shareStreem;
-          clientStreamRef.current = shareStreem;
           const shareStreemAudioTrack = shareStreem.getAudioTracks()[0];
 
           if (shareStreemAudioTrack) {
@@ -132,62 +153,59 @@ function ClientVideo({
               sender.replaceTrack(screenSharingTrack);
             }
           });
-
-          console.log(
-            "clientStreamRef.current ref",
-            clientStreamRef.current.getTracks()
-          );
           setScreenSharing(true);
           setVideo(true);
           screenSharingTrack.onended = () => {
             endShareScreen();
           };
+
+          userVideo.current.srcObject = shareStreem;
+          shareScreenStreamRef.current = shareStreem;
         })
         .catch((e) => {
           console.log(e);
         });
-    } else if (screenSharing && clientStreamRef.current) {
+    } else if (screenSharing) {
       endShareScreen();
     }
   };
 
   const endShareScreen = () => {
-    getAvaliableUserMedia().then((stream) => {
-      clientStreamRef.current = stream;
-      userVideo.current.srcObject = stream;
-      peers?.forEach((peerObj) => {
-        const sender = peerObj.peer
-          .getSenders()
-          .find((s) => s.track?.kind === "video");
-        if (stream.getVideoTracks()[0]) {
-          sender.replaceTrack(stream.getVideoTracks()[0]);
-        } else {
-          const fakeVideoTrack = createFakeVideoTrack();
-          sender.replaceTrack(fakeVideoTrack);
-        }
-      });
-      setScreenSharing(false);
-      setVideo(false);
+    const clientStreamVideo = clientStreamRef.current.getVideoTracks()[0];
+
+    peers?.forEach((peerObj) => {
+      const sender = peerObj.peer
+        .getSenders()
+        .find((s) => s.track?.kind === "video");
+      if (clientStreamVideo) {
+        sender.replaceTrack(clientStreamVideo);
+      } else {
+        const fakeVideoTrack = createFakeVideoTrack();
+        sender.replaceTrack(fakeVideoTrack);
+      }
     });
+    setScreenSharing(false);
+    setVideo(false);
+    userVideo.current.srcObject = clientStreamRef.current;
+    // getAvaliableUserMedia().then((stream) => {
+    //   clientStreamRef.current = stream;
+    //
+    // });
   };
 
-  const checkMultiDevices = () => {
-    return navigator.mediaDevices
-      .enumerateDevices()
-      .then((devices) => {
-        const videoDevices = devices.filter(
-          (device) => device.kind === "videoinput"
-        );
-        const audioDevices = devices.filter(
-          (device) => device.kind === "audioinput"
-        );
-        return videoDevices.length > 1 || audioDevices.length > 1
-          ? true
-          : false;
-      })
-      .catch((error) => {
-        return false;
-      });
+  const checkMultiDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(
+        (device) => device.kind === "videoinput"
+      );
+      const audioDevices = devices.filter(
+        (device_1) => device_1.kind === "audioinput"
+      );
+      return videoDevices.length > 1 || audioDevices.length > 1 ? true : false;
+    } catch (error) {
+      return false;
+    }
   };
 
   const switchDevice = (deviceId, kind) => {
@@ -204,8 +222,6 @@ function ClientVideo({
           userVideo.current.srcObject = newStream;
           clientStreamRef.current = newStream;
           setActiveVideoDevice(deviceId);
-
-          setAyhamStream(newStream);
 
           peers?.forEach((peerObj) => {
             const senderV = peerObj.peer
@@ -230,8 +246,6 @@ function ClientVideo({
           userVideo.current.srcObject = newStream;
           clientStreamRef.current = newStream;
           setActiveAudioDevice(deviceId);
-
-          setAyhamStream(newStream);
 
           peers?.forEach((peerObj) => {
             const senderV = peerObj.peer
@@ -267,6 +281,7 @@ function ClientVideo({
       },
     });
   };
+  
   useEffect(() => {
     checkMultiDevices()
       .then((result) => {

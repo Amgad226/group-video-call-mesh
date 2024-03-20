@@ -16,6 +16,7 @@ const Room = () => {
   const socketRef = useRef();
   const userVideo = useRef();
   const clientStreamRef = useRef(); // userStream
+  const shareScreenStreamRef = useRef();
   const peersRef = useRef([]); // was a single peer
 
   const [peers, setPeers] = useState([]);
@@ -28,7 +29,6 @@ const Room = () => {
   const history = useHistory();
   const { roomID } = useParams();
 
-  const [ayhamStram, setAyhamStream] = useState();
   const [permissionDenied, setPermissionDenied] = useState();
 
   const [activeVideoDevice, setActiveVideoDevice] = useState(null);
@@ -37,8 +37,8 @@ const Room = () => {
   const [videoDeviceNotExist, setVideoDeviceNotExist] = useState(false);
 
   async function ByForce() {
-    socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    // socketRef.current = io.connect("http://localhost:3001");
+    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    socketRef.current = io.connect("http://localhost:3001");
 
     getAvaliableUserMedia()
       .then((stream) => {
@@ -48,23 +48,25 @@ const Room = () => {
             stream.getVideoTracks()[0].getSettings().deviceId
           );
         } else {
+          // the vocie problem from here 
           const fakeVideoTrack = createFakeVideoTrack();
           console.log(fakeVideoTrack);
           stream.addTrack(fakeVideoTrack);
           setVideoDeviceNotExist(true);
         }
+
         if (stream.getAudioTracks()[0]) {
           setActiveAudioDevice(
             stream.getAudioTracks()[0].getSettings().deviceId
           );
         }
+        console.log(stream.getTracks());
 
         clientStreamRef.current = stream;
 
         userVideo.current.srcObject = clientStreamRef.current;
 
         setPermissionDenied(false);
-        setAyhamStream(stream);
 
         socketRef.current.emit("join room", roomID);
 
@@ -94,6 +96,7 @@ const Room = () => {
         console.log(err);
       });
   }
+
   useEffect(() => {
     ByForce();
     return () => {
@@ -130,9 +133,17 @@ const Room = () => {
     peer
       .setRemoteDescription(desc)
       .then(() => {
-        clientStreamRef.current
-          .getTracks()
-          .forEach((track) => peer.addTrack(track, clientStreamRef.current));
+        if (shareScreenStreamRef.current) {
+          shareScreenStreamRef.current
+            .getTracks()
+            .forEach((track) =>
+              peer.addTrack(track, shareScreenStreamRef.current)
+            );
+        } else {
+          clientStreamRef.current
+            .getTracks()
+            .forEach((track) => peer.addTrack(track, clientStreamRef.current));
+        }
       })
       .then(() => {
         return peer.createAnswer();
@@ -230,7 +241,7 @@ const Room = () => {
       const peer = callUser(
         remotePeer.id, // the old user socket id
         socketRef.current.id, // new user socket id
-        clientStreamRef.current // stream for new user
+        shareScreenStreamRef.current ?? clientStreamRef.current // stream for new user
       );
       // the peer is the peer of the new user
       peersRef.current.push({
@@ -269,6 +280,12 @@ const Room = () => {
       console.log(track);
       track.stop();
     });
+    if (shareScreenStreamRef.current) {
+      shareScreenStreamRef.current?.getTracks()?.forEach((track) => {
+        console.log(track);
+        track.stop();
+      });
+    }
     history.push("/");
   }
 
@@ -409,9 +426,8 @@ const Room = () => {
         <Container>
           <ClientVideo
             videoDeviceNotExist={videoDeviceNotExist}
-            ayhamStram={ayhamStram}
-            setAyhamStream={setAyhamStream}
             clientStreamRef={clientStreamRef}
+            shareScreenStreamRef={shareScreenStreamRef}
             userVideo={userVideo}
             peers={peers}
             isAdmin={iAdmin}
