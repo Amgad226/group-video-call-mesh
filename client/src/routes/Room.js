@@ -39,16 +39,26 @@ const Room = () => {
       .getUserMedia({
         video: (await checkCameraDevices())
           ? {
-            height: window.innerHeight / 2,
-            width: window.innerWidth / 2,
-          }
+              height: window.innerHeight / 2,
+              width: window.innerWidth / 2,
+            }
           : false,
         audio: await checkAudioDevices(),
       })
       .then((stream) => {
+        if (stream.getVideoTracks()[0]) {
+          stream.getVideoTracks()[0].track.enabled = false;
+          setActiveVideoDevice(
+            stream.getVideoTracks()[0].getSettings().deviceId
+          );
+        }
+        if (stream.getAudioTracks()[0]) {
+          setActiveAudioDevice(
+            stream.getAudioTracks()[0].getSettings().deviceId
+          );
+        }
+
         clientStreamRef.current = stream;
-        setActiveVideoDevice(clientStreamRef.current.getVideoTracks()[0].getSettings().deviceId)
-        setActiveAudioDevice(clientStreamRef.current.getAudioTracks()[0].getSettings().deviceId)
 
         userVideo.current.srcObject = clientStreamRef.current;
 
