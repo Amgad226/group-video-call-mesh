@@ -237,22 +237,13 @@ function ClientVideo({
 
   }
 
-  const findNewVideoDeviceId = (videoDevices, currentDeviceId) => {
-    for (let i = 0; i < videoDevices.length; i++) {
-      if (videoDevices[i].deviceId !== currentDeviceId) {
-        return videoDevices[i].deviceId;
-      }
-    }
-    return false;
-  };
   const getVideoStreamByDeviceId = (deviceId) => {
     return navigator.mediaDevices.getUserMedia({
       video: {
         deviceId: { exact: deviceId },
         height: window.innerHeight / 2,
         width: window.innerWidth / 2,
-      },
-      audio: true
+      }
     })
   }
   const getAudioStreamByDeviceId = (deviceId) => {
