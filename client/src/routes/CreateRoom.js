@@ -21,7 +21,7 @@ const StyledButton = styled.button`
   font-size: 30px;
   font-weight: bold;
   color: #fff;
-  background-color: #007bff;
+  background-color: red;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -42,7 +42,7 @@ const CreateRoom = (props) => {
 
   return (
     <Container>
-      <StyledButton onClick={create}>AAA1 Create room AAA1</StyledButton>
+      <StyledButton onClick={create}>AAA2 Create room AAA2</StyledButton>
     </Container>
   );
 };
