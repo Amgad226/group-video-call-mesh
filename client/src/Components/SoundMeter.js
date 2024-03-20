@@ -64,10 +64,10 @@ const SoundVolumeMeter = ({ mediaStream }) => {
         audioContext = null;
       }
       if (mediaStream) {
-        mediaStream.getTracks().forEach((track) => {
-          track.stop();
-        });
-        mediaStream = null;
+        // mediaStream.getTracks().forEach((track) => {
+          // track.stop();
+        // });
+        // mediaStream = null;
       }
     };
   }, [mediaStream]);
