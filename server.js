@@ -34,7 +34,7 @@ io.on("connection", (socket) => {
     // payload : {userToSignal , signal {same sdb} ,callerID}
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const user = room.find((peer) => peer.id === socket.id);
+    const user = room?.find((peer) => peer.id === socket.id);
 
     console.log("offer", user);
     io.to(payload.userToSignal).emit("offer", {
@@ -68,7 +68,7 @@ io.on("connection", (socket) => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
     if (room) {
-      room = room.filter((peer) => peer.id !== socket.id);
+      room = room?.filter((peer) => peer.id !== socket.id);
       users[roomID] = room;
     }
     if (users[roomID]?.length > 0) {
@@ -89,7 +89,7 @@ io.on("connection", (socket) => {
   socket.on("kick-out", (userID) => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("kick-out by", caller);
     if (caller.isAdmin) {
       console.log("force-leave for", userID);
@@ -99,7 +99,7 @@ io.on("connection", (socket) => {
   socket.on("end-call", () => {
     const roomID = socketToRoom[socket.id];
     let room = users[roomID];
-    const caller = room.find((peer) => peer.id === socket.id);
+    const caller = room?.find((peer) => peer.id === socket.id);
     console.log("end-call", caller);
     if (caller.isAdmin) {
       room?.forEach((peer) => {
@@ -165,7 +165,7 @@ io.on("connection", (socket) => {
     if (caller.isAdmin) {
       console.log("force-cam-off for", userID);
       // if (room) {
-      //   room = room.filter((peer) => peer.id !== userID);
+      //   room = room?.filter((peer) => peer.id !== userID);
       //   users[roomID] = room;
       // }
 
