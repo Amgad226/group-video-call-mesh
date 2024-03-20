@@ -9,6 +9,8 @@ import { checkCameraDevices } from "../helpers/checkCameraDevice";
 import { checkAudioDevices } from "../helpers/checkAudioDevices";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import { Button, Modal, Space } from "antd";
+import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
+import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 
 const Room = () => {
   const socketRef = useRef();
@@ -32,25 +34,24 @@ const Room = () => {
   const [activeVideoDevice, setActiveVideoDevice] = useState(null);
   const [activeAudioDevice, setActiveAudioDevice] = useState(null);
 
+  const [videoDeviceNotExist, setVideoDeviceNotExist] = useState(false);
+
   async function ByForce() {
-    socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    // socketRef.current = io.connect("http://localhost:3001");
-    navigator.mediaDevices
-      .getUserMedia({
-        video: (await checkCameraDevices())
-          ? {
-              height: window.innerHeight / 2,
-              width: window.innerWidth / 2,
-            }
-          : false,
-        audio: await checkAudioDevices(),
-      })
+    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    socketRef.current = io.connect("http://localhost:3001");
+
+    getAvaliableUserMedia()
       .then((stream) => {
         if (stream.getVideoTracks()[0]) {
-          stream.getVideoTracks()[0].track.enabled = false;
+          stream.getVideoTracks()[0].enabled = false;
           setActiveVideoDevice(
             stream.getVideoTracks()[0].getSettings().deviceId
           );
+        } else {
+          const fakeVideoTrack = createFakeVideoTrack();
+          console.log(fakeVideoTrack);
+          stream.addTrack(fakeVideoTrack);
+          setVideoDeviceNotExist(true);
         }
         if (stream.getAudioTracks()[0]) {
           setActiveAudioDevice(
@@ -89,7 +90,7 @@ const Room = () => {
       })
 
       .catch((err) => {
-        setPermissionDenied(true);
+        setPermissionDenied(err.toString());
         console.log(err);
       });
   }
@@ -273,30 +274,18 @@ const Room = () => {
 
   function handleForceMute() {
     setForceMuted(true);
-    // clientStreamRef.current
-    //   ?.getAudioTracks()
-    //   .forEach((track) => (track.enabled = false));
   }
 
   function handleUnMute() {
     setForceMuted(false);
-    // clientStreamRef.current
-    //   ?.getAudioTracks()
-    //   .forEach((track) => (track.enabled = true));
   }
 
   function handleForceCamOff() {
     setForceVideoStoped(true);
-    // clientStreamRef.current
-    //   ?.getVideoTracks()
-    //   .forEach((track) => (track.enabled = false));
   }
 
   function handleCamOn() {
     setForceVideoStoped(false);
-    // clientStreamRef.current
-    //   ?.getVideoTracks()
-    //   .forEach((track) => (track.enabled = true));
   }
 
   return (
@@ -305,7 +294,6 @@ const Room = () => {
         centered
         onOk={() => {
           window.location.reload();
-          // ByForce();
         }}
         okText="Retry"
         cancelButtonProps={{
@@ -315,9 +303,10 @@ const Room = () => {
         }}
         closable={false}
         title="Need Permissions"
-        open={permissionDenied}
+        open={!!permissionDenied}
       >
         <p>You have to enable video and audio permission to use our app</p>
+        {permissionDenied}
       </Modal>
       <div
         style={{
@@ -419,6 +408,7 @@ const Room = () => {
         </Space>
         <Container>
           <ClientVideo
+            videoDeviceNotExist={videoDeviceNotExist}
             ayhamStram={ayhamStram}
             setAyhamStream={setAyhamStream}
             clientStreamRef={clientStreamRef}
