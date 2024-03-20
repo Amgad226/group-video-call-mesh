@@ -34,7 +34,6 @@ function ClientVideo({
   const [video, setVideo] = useState(false);
   const [unMute, setUnMute] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
-  const [state, setState] = useState();
   const [initDone, setInitDone] = useState(false);
   const [hasMultipleDevices, setHasMultipleDevices] = useState(false);
   const [devices, setDevices] = useState([]);
@@ -83,12 +82,10 @@ function ClientVideo({
       clientStreamRef.current
         .getVideoTracks()
         .forEach((track) => (track.enabled = false));
-      state?.getTracks().forEach((track) => (track.enabled = false));
     } else {
       clientStreamRef.current
         ?.getVideoTracks()
         .forEach((track) => (track.enabled = true));
-      state?.getTracks().forEach((track) => (track.enabled = true));
     }
   }, [video]);
 
@@ -116,23 +113,26 @@ function ClientVideo({
           console.log(clientStreamRef.current.getTracks());
           userVideo.current.srcObject = shareStreem;
           clientStreamRef.current = shareStreem;
+          const shareStreemAudioTrack = shareStreem.getAudioTracks()[0];
+
+          if (shareStreemAudioTrack) {
+            shareStreem.removeTrack(shareStreemAudioTrack);
+          } else {
+            shareStreem.addTrack(clientStreamRef.current.getAudioTracks()[0]);
+          }
+
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
           peers?.forEach((peerObj) => {
             const sender = peerObj.peer
               .getSenders()
               .find((s) => s?.track?.kind === "video");
 
-            console.log(sender);
+            console.log("audio", shareStreemAudioTrack);
             if (sender) {
               sender.replaceTrack(screenSharingTrack);
-            } else {
-              // peerObj.peer.addTrack(
-              //   screenSharingTrack,
-              //   clientStreamRef.current
-              // );
             }
           });
-          setState(shareStreem);
+
           console.log(
             "clientStreamRef.current ref",
             clientStreamRef.current.getTracks()
@@ -166,17 +166,10 @@ function ClientVideo({
           sender.replaceTrack(fakeVideoTrack);
         }
       });
-      state?.getTracks().forEach((track) => track.stop());
       setScreenSharing(false);
       setVideo(false);
     });
   };
-
-  useEffect(() => {
-    return () => {
-      state?.getTracks().forEach((track) => track.stop());
-    };
-  }, [state]);
 
   const checkMultiDevices = () => {
     return navigator.mediaDevices
