@@ -16,8 +16,11 @@ const Room = () => {
   const socketRef = useRef();
   const userVideo = useRef();
   const clientStreamRef = useRef(); // userStream
-  const shareScreenStreamRef = useRef();
-  const peersRef = useRef([]); // was a single peer
+  const shareScreenStreamRef = useRef(); // for share screen insted of the user video
+
+  const newTrackForShareScreenRef = useRef();
+
+  const peersRef = useRef([]);
 
   const [peers, setPeers] = useState([]);
   const [iAdmin, setIAdmin] = useState(false);
@@ -37,8 +40,8 @@ const Room = () => {
   const [videoDeviceNotExist, setVideoDeviceNotExist] = useState(false);
 
   async function ByForce() {
-    socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    // socketRef.current = io.connect("http://localhost:3001");
+    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    socketRef.current = io.connect("http://localhost:3001");
 
     getAvaliableUserMedia()
       .then((stream) => {
@@ -48,7 +51,7 @@ const Room = () => {
             stream.getVideoTracks()[0].getSettings().deviceId
           );
         } else {
-          // the vocie problem from here 
+          // the vocie problem from here
           const fakeVideoTrack = createFakeVideoTrack();
           console.log(fakeVideoTrack);
           stream.addTrack(fakeVideoTrack);
@@ -118,31 +121,58 @@ const Room = () => {
 
     peer.onicecandidate = (e) => handleICECandidateEvent(e, userID);
     // peer.ontrack = handleTrackEvent;
-    if (initiator) {
+    // if (initiator) {
       peer.onnegotiationneeded = () =>
         handleNegotiationNeededEvent(userID, peer);
-    }
+    // }
 
     return peer;
   }
 
   function handleRecieveCall(incoming) {
     console.log(incoming);
-    const peer = createPeer(incoming.callerID, false);
+    let peer;
+    const existingPeerObj = peersRef.current.find(
+      (peerRef) => peerRef.peerID === incoming.callerID
+    );
+
+    console.log(existingPeerObj);
+    if (existingPeerObj) {
+      peer = existingPeerObj.peer;
+    } else {
+      peer = createPeer(incoming.callerID, false);
+    }
     const desc = new RTCSessionDescription(incoming.signal);
     peer
       .setRemoteDescription(desc)
       .then(() => {
-        if (shareScreenStreamRef.current) {
-          shareScreenStreamRef.current
-            .getTracks()
-            .forEach((track) =>
-              peer.addTrack(track, shareScreenStreamRef.current)
-            );
-        } else {
-          clientStreamRef.current
-            .getTracks()
-            .forEach((track) => peer.addTrack(track, clientStreamRef.current));
+        const hasTaraks = peer
+          .getSenders()
+          .filter((sender) => sender.track !== null);
+        console.log(hasTaraks);
+        if (hasTaraks.length == 0) {
+          // for check if the peer has tarck already to not add the same track twice
+          if (shareScreenStreamRef.current) {
+            shareScreenStreamRef.current
+              .getTracks()
+              .forEach((track) =>
+                peer.addTrack(track, shareScreenStreamRef.current)
+              );
+          } else {
+            clientStreamRef.current
+              .getTracks()
+              .forEach((track) =>
+                peer.addTrack(track, clientStreamRef.current)
+              );
+          }
+
+          if (newTrackForShareScreenRef.current) {
+            newTrackForShareScreenRef.current
+              .getTracks()
+              .forEach((track) =>
+                peer.addTrack(track, clientStreamRef.current)
+              );
+          }
         }
       })
       .then(() => {
@@ -159,12 +189,28 @@ const Room = () => {
         };
         socketRef.current.emit("answer", payload);
       });
-    peersRef.current.push({
-      peerID: incoming.callerID,
-      peer,
-      isAdmin: incoming.isAdmin,
-    });
-    setPeers((peers) => [...peers, { isAdmin: incoming.isAdmin, peer }]);
+
+    if (existingPeerObj) {
+      const index = peersRef.current.findIndex(
+        (peerObj) => peerObj.peerID === incoming.callerID
+      );
+
+      if (index !== -1) {
+        peersRef.current[index].peer = peer;
+        setPeers((peers) => {
+          const updatedPeers = [...peers];
+          updatedPeers[index].peer = peer;
+          return updatedPeers;
+        });
+      }
+    } else {
+      peersRef.current.push({
+        peerID: incoming.callerID,
+        peer,
+        isAdmin: incoming.isAdmin,
+      });
+      setPeers((peers) => [...peers, { isAdmin: incoming.isAdmin, peer }]);
+    }
   }
 
   function handleAnswer(message) {
