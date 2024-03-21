@@ -16,6 +16,7 @@ import SoundVolumeMeter from "./SoundMeter";
 import DeviceSelectionModal from "./DeviceSelectionModal";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
+import { checkConnectionState } from "../helpers/checkConnectionState";
 function ClientVideo({
   videoDeviceNotExist,
   forceMuted,
@@ -144,13 +145,17 @@ function ClientVideo({
 
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
           peers?.forEach((peerObj) => {
-            const sender = peerObj.peer
-              .getSenders()
-              .find((s) => s?.track?.kind === "video");
+            const coneectionState = peerObj.peer.connectionState;
 
-            console.log("audio", shareStreemAudioTrack);
-            if (sender) {
-              sender.replaceTrack(screenSharingTrack);
+            if (checkConnectionState(coneectionState)) {
+              const sender = peerObj.peer
+                .getSenders()
+                .find((s) => s?.track?.kind === "video");
+
+              console.log("audio", shareStreemAudioTrack);
+              if (sender) {
+                sender.replaceTrack(screenSharingTrack);
+              }
             }
           });
           setScreenSharing(true);
@@ -174,14 +179,19 @@ function ClientVideo({
     const clientStreamVideo = clientStreamRef.current.getVideoTracks()[0];
 
     peers?.forEach((peerObj) => {
-      const sender = peerObj.peer
-        .getSenders()
-        .find((s) => s.track?.kind === "video");
-      if (clientStreamVideo) {
-        sender.replaceTrack(clientStreamVideo);
-      } else {
-        const fakeVideoTrack = createFakeVideoTrack();
-        sender.replaceTrack(fakeVideoTrack);
+      
+      const coneectionState = peerObj.peer.connectionState;
+
+      if (checkConnectionState(coneectionState)) {
+        const sender = peerObj.peer
+          .getSenders()
+          .find((s) => s.track?.kind === "video");
+        if (clientStreamVideo) {
+          sender.replaceTrack(clientStreamVideo);
+        } else {
+          const fakeVideoTrack = createFakeVideoTrack();
+          sender.replaceTrack(fakeVideoTrack);
+        }
       }
     });
     setScreenSharing(false);
@@ -224,10 +234,13 @@ function ClientVideo({
           setActiveVideoDevice(deviceId);
 
           peers?.forEach((peerObj) => {
-            const senderV = peerObj.peer
-              .getSenders()
-              .find((s) => s?.track?.kind === "video");
-            senderV.replaceTrack(newStream.getVideoTracks()[0]);
+            const coneectionState = peerObj.peer.connectionState;
+            if (checkConnectionState(coneectionState)) {
+              const senderV = peerObj.peer
+                .getSenders()
+                .find((s) => s?.track?.kind === "video");
+              senderV.replaceTrack(newStream.getVideoTracks()[0]);
+            }
           });
         })
         .catch((error) => {
@@ -248,10 +261,14 @@ function ClientVideo({
           setActiveAudioDevice(deviceId);
 
           peers?.forEach((peerObj) => {
-            const senderV = peerObj.peer
-              .getSenders()
-              .find((s) => s?.track?.kind === "audio");
-            senderV.replaceTrack(newStream.getAudioTracks()[0]);
+            const coneectionState = peerObj.peer.connectionState;
+
+            if (checkConnectionState(coneectionState)) {
+              const senderV = peerObj.peer
+                .getSenders()
+                .find((s) => s?.track?.kind === "audio");
+              senderV.replaceTrack(newStream.getAudioTracks()[0]);
+            }
           });
         })
         .catch((error) => {
@@ -281,7 +298,7 @@ function ClientVideo({
       },
     });
   };
-  
+
   useEffect(() => {
     checkMultiDevices()
       .then((result) => {
