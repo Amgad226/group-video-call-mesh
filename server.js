@@ -209,6 +209,38 @@ io.on("connection", (socket) => {
       });
     }
   });
+
+  socket.on("remove-track", ({ trackID }) => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room?.find((peer) => peer.id === socket.id);
+    console.log("remove track", caller.id, trackID);
+    room?.forEach((peer) => {
+      if (caller.id !== peer.id) {
+        console.log("remove track for", peer);
+        io.to(peer.id).emit("track-removed", {
+          callerID: socket.id,
+          trackID,
+        });
+      }
+    });
+  });
+
+  socket.on("remove-stream", ({ streamID }) => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room?.find((peer) => peer.id === socket.id);
+    console.log("stream removed", caller.id, streamID);
+    room?.forEach((peer) => {
+      if (caller.id !== peer.id) {
+        console.log("stream track for", peer);
+        io.to(peer.id).emit("stream-removed", {
+          callerID: socket.id,
+          streamID,
+        });
+      }
+    });
+  });
 });
 
 server.listen(3001, () => console.log("server is running on port 3001"));
