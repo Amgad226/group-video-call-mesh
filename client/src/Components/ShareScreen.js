@@ -1,10 +1,10 @@
-import { Button } from "antd";
 import React from "react";
-
+import styles from "./styles.module.css";
 function ShareScreen({ streamRef }) {
   return (
-    <div>
+    <div className={styles.containerrr}>
       <video
+        controls
         ref={(videoRef) => {
           if (videoRef && streamRef.current) {
             videoRef.srcObject = streamRef.current;
@@ -13,6 +13,7 @@ function ShareScreen({ streamRef }) {
         playsInline
         autoPlay
         style={{ width: "100%", height: 500 }}
+        className={styles.videoShare}
       />
     </div>
   );

@@ -20,7 +20,6 @@ const Room = () => {
   const shareScreenStreamRef = useRef(); // for share screen insted of the user video
 
   const newTrackForShareScreenRef = useRef();
-  const [isShareScreenLayout, setIsShareScreenLayout] = useState(false);
 
   const peersRef = useRef([]);
 
@@ -43,6 +42,11 @@ const Room = () => {
 
   const [removedStreamObj, setRemoveStreamObj] = useState();
 
+  const [shareScreenMode, setShareScreenMode] = useState({
+    owner: false,
+    streamId: null,
+  });
+
   async function ByForce() {
     socketRef.current = io.connect("https://yorkbritishacademy.net/");
     // socketRef.current = io.connect("http://localhost:3001");
@@ -55,7 +59,6 @@ const Room = () => {
             stream.getVideoTracks()[0].getSettings().deviceId
           );
         } else {
-          // the vocie problem from here
           const fakeVideoTrack = createFakeVideoTrack();
           console.log(fakeVideoTrack);
           stream.addTrack(fakeVideoTrack);
@@ -98,6 +101,13 @@ const Room = () => {
         socketRef.current.on("cam-on", handleCamOn);
 
         socketRef.current.on("stream-removed", handleStreamRemoved);
+
+        socketRef.current.on("share-screen-mode", handleShareScreenMode);
+
+        socketRef.current.on(
+          "share-screen-mode-stop",
+          handleShareScreenModeStop
+        );
       })
 
       .catch((err) => {
@@ -360,6 +370,16 @@ const Room = () => {
     setRemoveStreamObj({ callerID, streamID });
   }
 
+  function handleShareScreenMode({ ownerID, streamID }) {
+    console.log({ ownerID, streamID });
+    setShareScreenMode({ owner: false, streamId: streamID });
+  }
+
+  function handleShareScreenModeStop() {
+    setShareScreenMode({ owner: false, streamId: null });
+    newTrackForShareScreenRef.current = undefined;
+  }
+
   const addShareScreenWithNewTrack = () => {
     navigator.mediaDevices
       .getDisplayMedia({
@@ -368,7 +388,7 @@ const Room = () => {
       })
       .then((newStream) => {
         newTrackForShareScreenRef.current = newStream;
-        setIsShareScreenLayout(true);
+        setShareScreenMode({ owner: true, streamId: newStream.id });
         peersRef.current.forEach((peerObj) => {
           const coneectionState = peerObj.peer.connectionState;
           if (checkConnectionState(coneectionState)) {
@@ -376,6 +396,9 @@ const Room = () => {
               peerObj.peer.addTrack(track, newStream);
             });
           }
+        });
+        socketRef.current.emit("start-share-screen", {
+          streamID: newStream.id,
         });
         newStream.getVideoTracks()[0].onended = stopShareScreenWithNewTrack;
       })
@@ -395,7 +418,8 @@ const Room = () => {
       streamID: newTrackForShareScreenRef.current.id,
     });
     newTrackForShareScreenRef.current = undefined;
-    setIsShareScreenLayout(false);
+    socketRef.current.emit("stop-share-screen");
+    setShareScreenMode({ owner: false, streamId: null });
   };
 
   return (
@@ -436,7 +460,7 @@ const Room = () => {
             alignItems: "center",
           }}
         >
-          {!isShareScreenLayout && !isMobileDevice() && (
+          {!isMobileDevice() && !shareScreenMode.streamId && (
             <Button
               type="primary"
               size="large"
@@ -445,16 +469,18 @@ const Room = () => {
               Add Share Screen in new Track
             </Button>
           )}
-          {isShareScreenLayout && !isMobileDevice() && (
-            <Button
-              type="primary"
-              size="large"
-              danger
-              onClick={stopShareScreenWithNewTrack}
-            >
-              Stop Sharing
-            </Button>
-          )}
+          {!isMobileDevice() &&
+            shareScreenMode.streamId &&
+            shareScreenMode.owner && (
+              <Button
+                type="primary"
+                size="large"
+                danger
+                onClick={stopShareScreenWithNewTrack}
+              >
+                Stop Sharing
+              </Button>
+            )}
           <Button
             size="large"
             danger
@@ -534,7 +560,7 @@ const Room = () => {
             </>
           )}
         </Space>
-        {isShareScreenLayout && (
+        {shareScreenMode.streamId && (
           <>
             <ShareScreen streamRef={newTrackForShareScreenRef} />
           </>
@@ -558,6 +584,9 @@ const Room = () => {
           {peers.map((peer, index) => {
             return (
               <Video
+                newTrackForShareScreenRef={newTrackForShareScreenRef}
+                shareScreenStreamId={shareScreenMode.streamId}
+                setShareScreenMode={setShareScreenMode}
                 id={peersRef.current[index].peerID}
                 key={peersRef.current[index].peerID}
                 peerObj={peer}

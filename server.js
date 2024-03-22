@@ -241,6 +241,35 @@ io.on("connection", (socket) => {
       }
     });
   });
+
+  socket.on("start-share-screen", ({ streamID }) => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room?.find((peer) => peer.id === socket.id);
+    console.log("start-share-screen", caller.id, streamID);
+    room?.forEach((peer) => {
+      if (caller.id !== peer.id) {
+        console.log("start-share-screen for", peer);
+        io.to(peer.id).emit("share-screen-mode", {
+          ownerID: socket.id,
+          streamID,
+        });
+      }
+    });
+  });
+
+  socket.on("stop-share-screen", () => {
+    const roomID = socketToRoom[socket.id];
+    let room = users[roomID];
+    const caller = room?.find((peer) => peer.id === socket.id);
+    console.log("stop-share-screen", caller.id);
+    room?.forEach((peer) => {
+      if (caller.id !== peer.id) {
+        console.log("stop-share-screen for", peer);
+        io.to(peer.id).emit("share-screen-mode-stop");
+      }
+    });
+  });
 });
 
 server.listen(3001, () => console.log("server is running on port 3001"));

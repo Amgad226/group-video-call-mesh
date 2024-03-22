@@ -8,17 +8,19 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 
 const Video = ({
+  newTrackForShareScreenRef,
+  setShareScreenMode,
+  shareScreenStreamId,
   removedStreamID,
   setRemoveStreamObj,
   peerObj,
   iAdmin,
   id,
   socket,
-  ...restProps
 }) => {
-  const ref = useRef();
+  const realrefs = useRef([]);
   const refs = useRef([]);
-  const [forSoundTrackStream, setforSoundTrackStream] = useState();
+  const [forSoundTrackStream, setforSoundTrackStream] = useState([]);
   const [forceMuted, setForceMuted] = useState(false);
   const [forceVideoStoped, setForceVideoStoped] = useState(false);
   const [streams, setStreams] = useState([]);
@@ -36,10 +38,31 @@ const Video = ({
       if (!existStream) {
         refs.current.push(e.streams[0]);
         setStreams([...refs.current]);
-        setforSoundTrackStream(e.streams[0]);
+        if (e.streams[0].getAudioTracks()[0]) {
+          setforSoundTrackStream([...refs.current, e.streams[0]]);
+        }
+      }
+      //if the server event reviced before the track event
+      if (shareScreenStreamId) {
+        const shareScreenStream = refs.current.find(
+          (stream) => stream.id == shareScreenStreamId
+        );
+        if (shareScreenStream) {
+          console.log("shareScreenStream", shareScreenStream);
+          console.log("shareScreenStream", refs.current);
+          newTrackForShareScreenRef.current = shareScreenStream;
+          const newStreams = refs.current.filter(
+            (stream) => stream.id !== shareScreenStreamId
+          );
+          refs.current = [...newStreams];
+          setStreams([...refs.current]);
+          setShareScreenMode((prev) => {
+            return { ...prev };
+          });
+        }
       }
     }
-  }, []);
+  }, [shareScreenStreamId]);
 
   useEffect(() => {
     if (removedStreamID) {
@@ -55,99 +78,127 @@ const Video = ({
   }, [removedStreamID]);
 
   useEffect(() => {
+    //if the server event reviced after the track event
+    if (shareScreenStreamId) {
+      console.log(shareScreenStreamId);
+      const shareScreenStream = refs.current.find(
+        (stream) => stream.id == shareScreenStreamId
+      );
+      console.log("shareScreenStream", shareScreenStream);
+      console.log("shareScreenStream", refs.current);
+
+      if (shareScreenStream) {
+        newTrackForShareScreenRef.current = shareScreenStream;
+        const newStreams = refs.current.filter(
+          (stream) => stream.id !== shareScreenStreamId
+        );
+        refs.current = [...newStreams];
+        setStreams([...refs.current]);
+        setShareScreenMode((prev) => {
+          return { ...prev };
+        });
+      }
+    }
+  }, [shareScreenStreamId]);
+
+  useEffect(() => {
     console.log(streams);
   }, [streams]);
 
-  const requestFullScreen = () => {
-    if (ref.current.requestFullscreen) {
-      ref.current.requestFullscreen();
-    } else if (ref.current.mozRequestFullScreen) {
+  const requestFullScreen = (ref) => {
+    if (ref.requestFullscreen) {
+      ref.requestFullscreen();
+    } else if (ref.mozRequestFullScreen) {
       // Firefox
-      ref.current.mozRequestFullScreen();
-    } else if (ref.current.webkitRequestFullscreen) {
+      ref.mozRequestFullScreen();
+    } else if (ref.webkitRequestFullscreen) {
       // Chrome, Safari and Opera
-      ref.current.webkitRequestFullscreen();
-    } else if (ref.current.msRequestFullscreen) {
+      ref.webkitRequestFullscreen();
+    } else if (ref.msRequestFullscreen) {
       // IE/Edge
-      ref.current.msRequestFullscreen();
+      ref.msRequestFullscreen();
     }
   };
-  const Actions = (
-    <Space direction="vertical">
-      {iAdmin && (
-        <>
+  const Actions = (ref) => (
+    <>
+      {ref && (
+        <Space direction="vertical">
+          {iAdmin && (
+            <>
+              <Button
+                onClick={() => {
+                  socket.emit("kick-out", id);
+                }}
+                block
+                type="primary"
+                danger
+              >
+                Kick-Out
+              </Button>
+              {!forceMuted && (
+                <Button
+                  onClick={() => {
+                    setForceMuted(true);
+                    socket.emit("mute-user", id);
+                  }}
+                  block
+                  type="dashed"
+                  danger
+                >
+                  Mute
+                </Button>
+              )}
+              {forceMuted && (
+                <Button
+                  onClick={() => {
+                    setForceMuted(false);
+                    socket.emit("unmute-user", id);
+                  }}
+                  block
+                  type="dashed"
+                >
+                  unMute
+                </Button>
+              )}
+              {!forceVideoStoped && (
+                <Button
+                  onClick={() => {
+                    setForceVideoStoped(true);
+                    socket.emit("cam-off-user", id);
+                  }}
+                  block
+                  type="dashed"
+                  danger
+                >
+                  Stop Video
+                </Button>
+              )}
+              {forceVideoStoped && (
+                <Button
+                  onClick={() => {
+                    setForceVideoStoped(false);
+                    socket.emit("cam-on-user", id);
+                  }}
+                  block
+                  type="primary"
+                >
+                  Enable Video
+                </Button>
+              )}
+            </>
+          )}
           <Button
-            onClick={() => {
-              socket.emit("kick-out", id);
-            }}
             block
+            onClick={() => {
+              requestFullScreen(ref);
+            }}
             type="primary"
-            danger
           >
-            Kick-Out
+            Full Screen
           </Button>
-          {!forceMuted && (
-            <Button
-              onClick={() => {
-                setForceMuted(true);
-                socket.emit("mute-user", id);
-              }}
-              block
-              type="dashed"
-              danger
-            >
-              Mute
-            </Button>
-          )}
-          {forceMuted && (
-            <Button
-              onClick={() => {
-                setForceMuted(false);
-                socket.emit("unmute-user", id);
-              }}
-              block
-              type="dashed"
-            >
-              unMute
-            </Button>
-          )}
-          {!forceVideoStoped && (
-            <Button
-              onClick={() => {
-                setForceVideoStoped(true);
-                socket.emit("cam-off-user", id);
-              }}
-              block
-              type="dashed"
-              danger
-            >
-              Stop Video
-            </Button>
-          )}
-          {forceVideoStoped && (
-            <Button
-              onClick={() => {
-                setForceVideoStoped(false);
-                socket.emit("cam-on-user", id);
-              }}
-              block
-              type="primary"
-            >
-              Enable Video
-            </Button>
-          )}
-        </>
+        </Space>
       )}
-      <Button
-        block
-        onClick={() => {
-          requestFullScreen();
-        }}
-        type="primary"
-      >
-        Full Screen
-      </Button>
-    </Space>
+    </>
   );
 
   return (
@@ -156,7 +207,7 @@ const Video = ({
         return (
           <>
             <div
-              style={{ flexDirection: "column-reverse", background: "red" }}
+              style={{ flexDirection: "column-reverse" }}
               className={`${styles.peerVideo} ${styles.videoFrame}`}
             >
               <video
@@ -166,13 +217,14 @@ const Video = ({
                 ref={(videoRef) => {
                   if (videoRef && stream) {
                     videoRef.srcObject = stream;
+                    realrefs.current.push(videoRef);
                   }
                 }}
                 borderColor={generateRandomColor()}
                 className={styles.video}
               />
-              {forSoundTrackStream && (
-                <SoundVolumeMeter mediaStream={forSoundTrackStream} />
+              {forSoundTrackStream[index] && (
+                <SoundVolumeMeter mediaStream={forSoundTrackStream[index]} />
               )}
               <div className={styles.tagContainer}>
                 {peerObj.isAdmin && (
@@ -182,7 +234,7 @@ const Video = ({
                 )}
                 <Popover
                   placement="bottomRight"
-                  content={Actions}
+                  content={Actions(realrefs.current[index])}
                   trigger="click"
                 >
                   <Button
