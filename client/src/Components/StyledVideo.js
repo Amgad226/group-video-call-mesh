@@ -9,6 +9,5 @@ export const StyledVideo = styled.video`
   // border-radius: 10px;
   background-image: url(${img});
   backgound-size: contain;
-  background: black;
   // transform : scaleX(-1); because the share screen breaks
 `;
