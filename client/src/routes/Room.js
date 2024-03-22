@@ -1,16 +1,16 @@
+import { Button, Modal, Space } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import io from "socket.io-client";
 import ClientVideo from "../Components/ClientVideo";
 import { Container } from "../Components/Container";
+import ShareScreen from "../Components/ShareScreen";
 import Video from "../Components/Video";
 import { iceConfig } from "../config/iceConfig";
-import { checkCameraDevices } from "../helpers/checkCameraDevice";
-import { checkAudioDevices } from "../helpers/checkAudioDevices";
-import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import { Button, Modal, Space } from "antd";
-import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
+import { checkConnectionState } from "../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
+import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 
 const Room = () => {
   const socketRef = useRef();
@@ -19,6 +19,7 @@ const Room = () => {
   const shareScreenStreamRef = useRef(); // for share screen insted of the user video
 
   const newTrackForShareScreenRef = useRef();
+  const [isShareScreenLayout, setIsShareScreenLayout] = useState(false);
 
   const peersRef = useRef([]);
 
@@ -39,9 +40,11 @@ const Room = () => {
 
   const [videoDeviceNotExist, setVideoDeviceNotExist] = useState(false);
 
+  const [removedStreamObj, setRemoveStreamObj] = useState();
+
   async function ByForce() {
-    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    socketRef.current = io.connect("http://localhost:3001");
+    socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    // socketRef.current = io.connect("http://localhost:3001");
 
     getAvaliableUserMedia()
       .then((stream) => {
@@ -92,6 +95,8 @@ const Room = () => {
         socketRef.current.on("unmute", handleUnMute);
 
         socketRef.current.on("cam-on", handleCamOn);
+
+        socketRef.current.on("stream-removed", handleStreamRemoved);
       })
 
       .catch((err) => {
@@ -122,8 +127,7 @@ const Room = () => {
     peer.onicecandidate = (e) => handleICECandidateEvent(e, userID);
     // peer.ontrack = handleTrackEvent;
     // if (initiator) {
-      peer.onnegotiationneeded = () =>
-        handleNegotiationNeededEvent(userID, peer);
+    peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID, peer);
     // }
 
     return peer;
@@ -165,12 +169,11 @@ const Room = () => {
                 peer.addTrack(track, clientStreamRef.current)
               );
           }
-
           if (newTrackForShareScreenRef.current) {
             newTrackForShareScreenRef.current
               .getTracks()
               .forEach((track) =>
-                peer.addTrack(track, clientStreamRef.current)
+                peer.addTrack(track, newTrackForShareScreenRef.current)
               );
           }
         }
@@ -199,7 +202,7 @@ const Room = () => {
         peersRef.current[index].peer = peer;
         setPeers((peers) => {
           const updatedPeers = [...peers];
-          updatedPeers[index].peer = peer;
+          if (updatedPeers[index]) updatedPeers[index].peer = peer;
           return updatedPeers;
         });
       }
@@ -351,6 +354,49 @@ const Room = () => {
     setForceVideoStoped(false);
   }
 
+  function handleStreamRemoved({ callerID, streamID }) {
+    console.log({ callerID, streamID });
+    setRemoveStreamObj({ callerID, streamID });
+  }
+
+  const addShareScreenWithNewTrack = () => {
+    navigator.mediaDevices
+      .getDisplayMedia({
+        audio: true,
+        video: true,
+      })
+      .then((newStream) => {
+        newTrackForShareScreenRef.current = newStream;
+        setIsShareScreenLayout(true);
+        peersRef.current.forEach((peerObj) => {
+          const coneectionState = peerObj.peer.connectionState;
+          if (checkConnectionState(coneectionState)) {
+            newStream.getTracks().forEach((track) => {
+              peerObj.peer.addTrack(track, newStream);
+            });
+          }
+        });
+        newStream.getVideoTracks()[0].onended = stopShareScreenWithNewTrack;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const stopShareScreenWithNewTrack = () => {
+    console.log(newTrackForShareScreenRef.current);
+    newTrackForShareScreenRef.current
+      .getTracks()
+      .forEach((track) => track.stop());
+    // need to remove track also
+    socketRef.current.emit("remove-stream", {
+      callerID: socketRef.current.id,
+      streamID: newTrackForShareScreenRef.current.id,
+    });
+    newTrackForShareScreenRef.current = undefined;
+    setIsShareScreenLayout(false);
+  };
+
   return (
     <>
       <Modal
@@ -377,7 +423,6 @@ const Room = () => {
           justifyContent: "center",
           alignItems: "center",
           flexDirection: "column",
-          backgroundColor: "#282829",
           padding: 10,
         }}
       >
@@ -390,6 +435,25 @@ const Room = () => {
             alignItems: "center",
           }}
         >
+          {!isShareScreenLayout && (
+            <Button
+              type="primary"
+              size="large"
+              onClick={addShareScreenWithNewTrack}
+            >
+              Add Share Screen in new Track
+            </Button>
+          )}
+          {isShareScreenLayout && (
+            <Button
+              type="primary"
+              size="large"
+              danger
+              onClick={stopShareScreenWithNewTrack}
+            >
+              Stop Sharing
+            </Button>
+          )}
           <Button
             size="large"
             danger
@@ -469,6 +533,11 @@ const Room = () => {
             </>
           )}
         </Space>
+        {isShareScreenLayout && (
+          <>
+            <ShareScreen streamRef={newTrackForShareScreenRef} />
+          </>
+        )}
         <Container>
           <ClientVideo
             videoDeviceNotExist={videoDeviceNotExist}
@@ -484,6 +553,7 @@ const Room = () => {
             activeAudioDevice={activeAudioDevice}
             setActiveAudioDevice={setActiveAudioDevice}
           />
+
           {peers.map((peer, index) => {
             return (
               <Video
@@ -492,6 +562,15 @@ const Room = () => {
                 peerObj={peer}
                 iAdmin={iAdmin}
                 socket={socketRef.current}
+                setRemoveStreamObj={setRemoveStreamObj}
+                removedStreamID={
+                  removedStreamObj
+                    ? peersRef.current[index].peerID ==
+                      removedStreamObj.callerID
+                      ? removedStreamObj.streamID
+                      : false
+                    : false
+                }
               />
             );
           })}

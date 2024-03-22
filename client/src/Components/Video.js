@@ -7,25 +7,56 @@ import { Button, Popover, Space, Tag } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 
-const Video = ({ peerObj, iAdmin, id, socket, ...restProps }) => {
+const Video = ({
+  removedStreamID,
+  setRemoveStreamObj,
+  peerObj,
+  iAdmin,
+  id,
+  socket,
+  ...restProps
+}) => {
   const ref = useRef();
+  const refs = useRef([]);
   const [forSoundTrackStream, setforSoundTrackStream] = useState();
   const [forceMuted, setForceMuted] = useState(false);
   const [forceVideoStoped, setForceVideoStoped] = useState(false);
+  const [streams, setStreams] = useState([]);
 
   useEffect(() => {
     console.log(peerObj);
     peerObj.peer.ontrack = handleTrackEvent;
-    // peer.on("stream", (stream) => {
-    //   console.log(stream);
-    //   ref.current.srcObject = stream;
-    // });
+
     function handleTrackEvent(e) {
       console.log("from track", e);
-      ref.current.srcObject = e.streams[0];
-      setforSoundTrackStream(e.streams[0]);
+      console.log("from track", e.streams[0].getTracks());
+      const existStream = refs.current.find(
+        (stream) => stream.id === e.streams[0].id
+      );
+      if (!existStream) {
+        refs.current.push(e.streams[0]);
+        setStreams([...refs.current]);
+        setforSoundTrackStream(e.streams[0]);
+      }
     }
   }, []);
+
+  useEffect(() => {
+    if (removedStreamID) {
+      console.log(refs.current);
+      const newStreams = refs.current.filter(
+        (stream) => stream.id !== removedStreamID
+      );
+      refs.current = newStreams;
+      setStreams([...refs.current]);
+      console.log(refs.current);
+      setRemoveStreamObj();
+    }
+  }, [removedStreamID]);
+
+  useEffect(() => {
+    console.log(streams);
+  }, [streams]);
 
   const requestFullScreen = () => {
     if (ref.current.requestFullscreen) {
@@ -120,42 +151,58 @@ const Video = ({ peerObj, iAdmin, id, socket, ...restProps }) => {
   );
 
   return (
-    <div
-      style={{ flexDirection: "column-reverse" }}
-      className={`${styles.peerVideo} ${styles.videoFrame}`}
-    >
-      <video
-        playsInline
-        autoPlay
-        ref={ref}
-        borderColor={generateRandomColor()}
-        className={styles.video}
-        // key={uuid()}
-      />
-      {forSoundTrackStream && (
-        <SoundVolumeMeter mediaStream={forSoundTrackStream} />
-      )}
-      <div className={styles.tagContainer}>
-        {peerObj.isAdmin && (
-          <Tag className={styles.tag} color="#f50">
-            Admin
-          </Tag>
-        )}
-        <Popover placement="bottomRight" content={Actions} trigger="click">
-          <Button
-            type="primary"
-            shape="circle"
-            size="large"
-            icon={
-              <FontAwesomeIcon
-                icon={faEllipsisVertical}
-                className={styles.options}
+    <>
+      {streams.map((stream, index) => {
+        return (
+          <>
+            <div
+              style={{ flexDirection: "column-reverse", background: "red" }}
+              className={`${styles.peerVideo} ${styles.videoFrame}`}
+            >
+              <video
+                key={index}
+                playsInline
+                autoPlay
+                ref={(videoRef) => {
+                  if (videoRef && stream) {
+                    videoRef.srcObject = stream;
+                  }
+                }}
+                borderColor={generateRandomColor()}
+                className={styles.video}
               />
-            }
-          />
-        </Popover>
-      </div>
-    </div>
+              {forSoundTrackStream && (
+                <SoundVolumeMeter mediaStream={forSoundTrackStream} />
+              )}
+              <div className={styles.tagContainer}>
+                {peerObj.isAdmin && (
+                  <Tag className={styles.tag} color="#f50">
+                    Admin
+                  </Tag>
+                )}
+                <Popover
+                  placement="bottomRight"
+                  content={Actions}
+                  trigger="click"
+                >
+                  <Button
+                    type="primary"
+                    shape="circle"
+                    size="large"
+                    icon={
+                      <FontAwesomeIcon
+                        icon={faEllipsisVertical}
+                        className={styles.options}
+                      />
+                    }
+                  />
+                </Popover>
+              </div>
+            </div>
+          </>
+        );
+      })}
+    </>
   );
 };
 
