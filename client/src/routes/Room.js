@@ -11,6 +11,7 @@ import { iceConfig } from "../config/iceConfig";
 import { checkConnectionState } from "../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
+import { isMobileDevice } from "../helpers/isMobileDevice";
 
 const Room = () => {
   const socketRef = useRef();
@@ -435,7 +436,7 @@ const Room = () => {
             alignItems: "center",
           }}
         >
-          {!isShareScreenLayout && (
+          {!isShareScreenLayout && !isMobileDevice() && (
             <Button
               type="primary"
               size="large"
@@ -444,7 +445,7 @@ const Room = () => {
               Add Share Screen in new Track
             </Button>
           )}
-          {isShareScreenLayout && (
+          {isShareScreenLayout && !isMobileDevice() && (
             <Button
               type="primary"
               size="large"
