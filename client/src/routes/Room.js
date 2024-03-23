@@ -50,8 +50,8 @@ const Room = () => {
   });
 
   async function ByForce() {
-    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    socketRef.current = io.connect("http://localhost:3001");
+    socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    // socketRef.current = io.connect("http://localhost:3001");
 
     getAvaliableUserMedia()
       .then((stream) => {
