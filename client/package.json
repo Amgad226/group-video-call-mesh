@@ -17,6 +17,7 @@
     "react-error-boundary": "^4.0.13",
     "react-router-dom": "^5.1.2",
     "react-scripts": "^5.0.1",
+    "sass": "^1.72.0",
     "simple-peer": "9.6.2",
     "socket.io-client": "^2.3.0",
     "styled-components": "^5.1.0",
