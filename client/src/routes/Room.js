@@ -19,7 +19,9 @@ const Room = () => {
   const clientStreamRef = useRef(); // userStream
   const shareScreenStreamRef = useRef(); // for share screen insted of the user video
 
-  const newTrackForShareScreenRef = useRef();
+  const newTrackForLocalShareScreenRef = useRef();
+
+  const newTrackForRemoteShareScreenRef = useRef();
 
   const peersRef = useRef([]);
 
@@ -48,8 +50,8 @@ const Room = () => {
   });
 
   async function ByForce() {
-    socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    // socketRef.current = io.connect("http://localhost:3001");
+    // socketRef.current = io.connect("https://yorkbritishacademy.net/");
+    socketRef.current = io.connect("http://localhost:3001");
 
     getAvaliableUserMedia()
       .then((stream) => {
@@ -180,11 +182,11 @@ const Room = () => {
                 peer.addTrack(track, clientStreamRef.current)
               );
           }
-          if (newTrackForShareScreenRef.current) {
-            newTrackForShareScreenRef.current
+          if (newTrackForLocalShareScreenRef.current) {
+            newTrackForLocalShareScreenRef.current
               .getTracks()
               .forEach((track) =>
-                peer.addTrack(track, newTrackForShareScreenRef.current)
+                peer.addTrack(track, newTrackForLocalShareScreenRef.current)
               );
           }
         }
@@ -377,7 +379,7 @@ const Room = () => {
 
   function handleShareScreenModeStop() {
     setShareScreenMode({ owner: false, streamId: null });
-    newTrackForShareScreenRef.current = undefined;
+    newTrackForRemoteShareScreenRef.current = undefined;
   }
 
   const addShareScreenWithNewTrack = () => {
@@ -387,7 +389,7 @@ const Room = () => {
         video: true,
       })
       .then((newStream) => {
-        newTrackForShareScreenRef.current = newStream;
+        newTrackForLocalShareScreenRef.current = newStream;
         setShareScreenMode({ owner: true, streamId: newStream.id });
         peersRef.current.forEach((peerObj) => {
           const coneectionState = peerObj.peer.connectionState;
@@ -408,16 +410,29 @@ const Room = () => {
   };
 
   const stopShareScreenWithNewTrack = () => {
-    console.log(newTrackForShareScreenRef.current);
-    newTrackForShareScreenRef.current
+    console.log(newTrackForLocalShareScreenRef.current);
+    newTrackForLocalShareScreenRef.current
       .getTracks()
       .forEach((track) => track.stop());
     // need to remove track also
+    peersRef.current.forEach((peerObj) => {
+      const coneectionState = peerObj.peer.connectionState;
+      if (checkConnectionState(coneectionState)) {
+        const tracks = newTrackForLocalShareScreenRef.current?.getTracks();
+        const senders = peerObj?.peer?.getSenders();
+        const sendersToDelete = senders?.filter((sender) =>
+          tracks.map((track) => track.id).includes(sender.track?.id)
+        );
+        sendersToDelete.forEach((sender) => {
+          peerObj.peer.removeTrack(sender);
+        });
+      }
+    });
     socketRef.current.emit("remove-stream", {
       callerID: socketRef.current.id,
-      streamID: newTrackForShareScreenRef.current.id,
+      streamID: newTrackForLocalShareScreenRef.current.id,
     });
-    newTrackForShareScreenRef.current = undefined;
+    newTrackForLocalShareScreenRef.current = undefined;
     socketRef.current.emit("stop-share-screen");
     setShareScreenMode({ owner: false, streamId: null });
   };
@@ -562,7 +577,13 @@ const Room = () => {
         </Space>
         {shareScreenMode.streamId && (
           <>
-            <ShareScreen streamRef={newTrackForShareScreenRef} />
+            <ShareScreen
+              streamRef={
+                newTrackForRemoteShareScreenRef.current
+                  ? newTrackForRemoteShareScreenRef
+                  : newTrackForLocalShareScreenRef
+              }
+            />
           </>
         )}
         <Container>
@@ -584,7 +605,7 @@ const Room = () => {
           {peers.map((peer, index) => {
             return (
               <Video
-                newTrackForShareScreenRef={newTrackForShareScreenRef}
+                newTrackForRemoteShareScreenRef={newTrackForRemoteShareScreenRef}
                 shareScreenStreamId={shareScreenMode.streamId}
                 setShareScreenMode={setShareScreenMode}
                 id={peersRef.current[index].peerID}

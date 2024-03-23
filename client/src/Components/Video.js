@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 
 const Video = ({
-  newTrackForShareScreenRef,
+  newTrackForRemoteShareScreenRef,
   setShareScreenMode,
   shareScreenStreamId,
   removedStreamID,
@@ -50,7 +50,7 @@ const Video = ({
         if (shareScreenStream) {
           console.log("shareScreenStream", shareScreenStream);
           console.log("shareScreenStream", refs.current);
-          newTrackForShareScreenRef.current = shareScreenStream;
+          newTrackForRemoteShareScreenRef.current = shareScreenStream;
           const newStreams = refs.current.filter(
             (stream) => stream.id !== shareScreenStreamId
           );
@@ -88,7 +88,7 @@ const Video = ({
       console.log("shareScreenStream", refs.current);
 
       if (shareScreenStream) {
-        newTrackForShareScreenRef.current = shareScreenStream;
+        newTrackForRemoteShareScreenRef.current = shareScreenStream;
         const newStreams = refs.current.filter(
           (stream) => stream.id !== shareScreenStreamId
         );
