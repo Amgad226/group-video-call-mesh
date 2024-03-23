@@ -22,16 +22,16 @@ io.on("connection", (socket) => {
       rooms[roomID].push({
         id: socket.id,
         isAdmin: false,
-        voice: false, // should be taken from the front
-        video: true, // should be taken from the front
+        voice: true, // should be taken from the front
+        video: false, // should be taken from the front
       });
     } else {
       rooms[roomID] = [
         {
           id: socket.id,
           isAdmin: true,
-          mute: false, // should be taken from the front
-          video: true, // should be taken from the front
+          mute: true, // should be taken from the front
+          video: false, // should be taken from the front
         },
       ];
     }
@@ -135,7 +135,8 @@ io.on("connection", (socket) => {
       room.forEach((peer) => {
         if (peer.id !== socket.id) {
           console.log("toggle-voice", voice_bool);
-          io.to(peer.id).emit("user_voice_toggled", {
+          io.to(peer.id).emit("user-voice-toggled", {
+            callerID: socket.id,
             voice_bool,
           });
         }
@@ -203,6 +204,7 @@ io.on("connection", (socket) => {
           console.log("toggle-video", video_bool);
 
           io.to(peer.id).emit("user-video-toggled", {
+            callerID: socket.id,
             video_bool,
           });
         }

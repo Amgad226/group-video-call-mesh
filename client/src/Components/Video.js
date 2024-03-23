@@ -5,7 +5,11 @@ import styles from "./styles.module.css";
 import SoundVolumeMeter from "./SoundMeter";
 import { Button, Popover, Space, Tag } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEllipsisVertical,
+  faMicrophoneSlash,
+  faVideoSlash,
+} from "@fortawesome/free-solid-svg-icons";
 
 const Video = ({
   newTrackForRemoteShareScreenRef,
@@ -100,10 +104,6 @@ const Video = ({
       }
     }
   }, [shareScreenStreamId]);
-
-  useEffect(() => {
-    console.log(streams);
-  }, [streams]);
 
   const requestFullScreen = (ref) => {
     if (ref.requestFullscreen) {
@@ -201,6 +201,11 @@ const Video = ({
     </>
   );
 
+  useEffect(() => {
+    const peer = peerObj.peer.getRemoteStreams();
+    console.log(peer[0]?.getTracks());
+  }, [peerObj]);
+
   return (
     <>
       {streams.map((stream, index) => {
@@ -231,6 +236,18 @@ const Video = ({
                   <Tag className={styles.tag} color="#f50">
                     Admin
                   </Tag>
+                )}
+                {!peerObj.voice && (
+                  <FontAwesomeIcon
+                    className={styles.remoteIcon}
+                    icon={faMicrophoneSlash}
+                  />
+                )}
+                {!peerObj.video && (
+                  <FontAwesomeIcon
+                    className={styles.remoteIcon}
+                    icon={faVideoSlash}
+                  />
                 )}
                 <Popover
                   placement="bottomRight"

@@ -110,6 +110,10 @@ const Room = () => {
           "share-screen-mode-stop",
           handleShareScreenModeStop
         );
+
+        socketRef.current.on("user-video-toggled", handleUserVideoToggled);
+
+        socketRef.current.on("user-voice-toggled", handleUserVoiceToggled);
       })
 
       .catch((err) => {
@@ -388,6 +392,59 @@ const Room = () => {
     newTrackForRemoteShareScreenRef.current = undefined;
   }
 
+  function handleUserVideoToggled(incoming) {
+    console.log(incoming);
+    const index = peersRef.current.findIndex(
+      (peerObj) => peerObj.peerID === incoming.callerID
+    );
+
+    if (index !== -1) {
+      peersRef.current[index] = {
+        ...peersRef.current[index],
+        video: incoming.video_bool,
+      };
+      setPeers((peers) => {
+        const updatedPeers = [...peers];
+        if (updatedPeers[index]) {
+          updatedPeers[index] = {
+            ...updatedPeers[index],
+            video: incoming.video_bool,
+          };
+          console.log(updatedPeers[index]);
+        }
+
+        return updatedPeers;
+      });
+    }
+  }
+
+  function handleUserVoiceToggled(incoming) {
+    console.log(incoming);
+
+    const index = peersRef.current.findIndex(
+      (peerObj) => peerObj.peerID === incoming.callerID
+    );
+
+    if (index !== -1) {
+      peersRef.current[index] = {
+        ...peersRef.current[index],
+        voice: incoming.voice_bool,
+      };
+      setPeers((peers) => {
+        const updatedPeers = [...peers];
+        if (updatedPeers[index]) {
+          updatedPeers[index] = {
+            ...updatedPeers[index],
+            voice: incoming.voice_bool,
+          };
+          console.log(updatedPeers[index]);
+        }
+
+        return updatedPeers;
+      });
+    }
+  }
+
   const addShareScreenWithNewTrack = () => {
     navigator.mediaDevices
       .getDisplayMedia({
@@ -606,6 +663,7 @@ const Room = () => {
             setActiveVideoDevice={setActiveVideoDevice}
             activeAudioDevice={activeAudioDevice}
             setActiveAudioDevice={setActiveAudioDevice}
+            socket={socketRef.current}
           />
 
           {peers.map((peer, index) => {

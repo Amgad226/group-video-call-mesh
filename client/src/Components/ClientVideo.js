@@ -17,6 +17,7 @@ import DeviceSelectionModal from "./DeviceSelectionModal";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { checkConnectionState } from "../helpers/checkConnectionState";
+
 function ClientVideo({
   videoDeviceNotExist,
   forceMuted,
@@ -30,6 +31,7 @@ function ClientVideo({
   setActiveVideoDevice,
   activeAudioDevice,
   setActiveAudioDevice,
+  socket,
 }) {
   const [showModal, setShowModal] = useState(false);
   const [video, setVideo] = useState(false);
@@ -79,10 +81,12 @@ function ClientVideo({
 
   useEffect(() => {
     if (!video && clientStreamRef.current) {
+      socket.emit("toggle-video", { video_bool: false });
       clientStreamRef.current
         .getVideoTracks()
         .forEach((track) => (track.enabled = false));
     } else if (video && clientStreamRef.current) {
+      socket.emit("toggle-video", { video_bool: true });
       clientStreamRef.current
         ?.getVideoTracks()
         .forEach((track) => (track.enabled = true));
@@ -101,10 +105,12 @@ function ClientVideo({
 
   useEffect(() => {
     if (!unMute && clientStreamRef.current) {
+      socket.emit("toggle-voice", { voice_bool: false });
       clientStreamRef.current
         .getAudioTracks()
         .forEach((track) => (track.enabled = false));
     } else if (unMute && clientStreamRef.current) {
+      socket.emit("toggle-voice", { voice_bool: true });
       clientStreamRef.current
         ?.getAudioTracks()
         .forEach((track) => (track.enabled = true));
@@ -179,7 +185,6 @@ function ClientVideo({
     const clientStreamVideo = clientStreamRef.current.getVideoTracks()[0];
 
     peers?.forEach((peerObj) => {
-      
       const coneectionState = peerObj.peer.connectionState;
 
       if (checkConnectionState(coneectionState)) {

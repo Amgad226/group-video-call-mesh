@@ -34,6 +34,13 @@
 .button {
   margin-bottom: 10px;
 }
+.remoteIcon {
+  position: relative;
+  color: white;
+  font-size: 25px;
+  cursor: pointer;
+  opacity: 0.5;
+}
 .icon {
   position: relative;
   color: white;
