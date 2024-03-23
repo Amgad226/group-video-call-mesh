@@ -5,7 +5,7 @@ const server = http.createServer(app);
 const socket = require("socket.io");
 const io = socket(server);
 
-const rooms = {}; //each room is array of users 
+const rooms = {}; //each room is array of users
 
 const socketToRoom = {};
 
@@ -22,8 +22,8 @@ io.on("connection", (socket) => {
       rooms[roomID].push({
         id: socket.id,
         isAdmin: false,
-        mute: false, // should be taken from the front
-        video_off: true, // should be taken from the front
+        voice: false, // should be taken from the front
+        video: true, // should be taken from the front
       });
     } else {
       rooms[roomID] = [
@@ -31,7 +31,7 @@ io.on("connection", (socket) => {
           id: socket.id,
           isAdmin: true,
           mute: false, // should be taken from the front
-          video_off: true, // should be taken from the front
+          video: true, // should be taken from the front
         },
       ];
     }
@@ -53,8 +53,8 @@ io.on("connection", (socket) => {
       signal: payload.signal, //new user SDP
       callerID: payload.callerID, // new_user_socket_id
       isAdmin: user.isAdmin,
-      mute: user.mute,
-      video_off: user.video_off,
+      voice: user.voice,
+      video: user.video,
     });
   });
 
@@ -123,6 +123,25 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("toggle-voice", ({ voice_bool }) => {
+    const roomID = socketToRoom[socket.id];
+    let room = rooms[roomID];
+    const userIndex = room?.findIndex((peer) => peer.id === socket.id);
+
+    if (userIndex !== -1) {
+      const updatedUser = { ...room[userIndex], voice: voice_bool };
+      room[userIndex] = updatedUser;
+      rooms[roomID] = room;
+      room.forEach((peer) => {
+        if (peer.id !== socket.id) {
+          console.log("toggle-voice", voice_bool);
+          io.to(peer.id).emit("user_voice_toggled", {
+            voice_bool,
+          });
+        }
+      });
+    }
+  });
   socket.on("mute-user", (userID) => {
     const roomID = socketToRoom[socket.id];
     let room = rooms[roomID];
@@ -170,6 +189,26 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("toggle-video", ({ video_bool }) => {
+    const roomID = socketToRoom[socket.id];
+    let room = rooms[roomID];
+    const userIndex = room?.findIndex((peer) => peer.id === socket.id);
+
+    if (userIndex !== -1) {
+      const updatedUser = { ...room[userIndex], video: video_bool };
+      room[userIndex] = updatedUser;
+      rooms[roomID] = room;
+      room.forEach((peer) => {
+        if (peer.id !== socket.id) {
+          console.log("toggle-video", video_bool);
+
+          io.to(peer.id).emit("user-video-toggled", {
+            video_bool,
+          });
+        }
+      });
+    }
+  });
   socket.on("cam-off-user", (userID) => {
     const roomID = socketToRoom[socket.id];
     let room = rooms[roomID];

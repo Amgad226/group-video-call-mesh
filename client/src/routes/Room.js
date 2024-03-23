@@ -223,8 +223,8 @@ const Room = () => {
       const peerObj = {
         peerID: incoming.callerID,
         isAdmin: incoming.isAdmin,
-        mute: incoming.mute,
-        video_off: incoming.video_off,
+        voice: incoming.voice,
+        video: incoming.video,
         peer,
       };
       peersRef.current.push(peerObj);
@@ -312,8 +312,8 @@ const Room = () => {
       const peerObj = {
         peerID: remotePeer.id,
         isAdmin: remotePeer.isAdmin,
-        mute: remotePeer.mute,
-        video_off: remotePeer.video_off,
+        voice: remotePeer.voice,
+        video: remotePeer.video,
         peer,
       };
       peersRef.current.push(peerObj);
