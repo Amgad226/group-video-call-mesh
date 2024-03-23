@@ -5,7 +5,7 @@ const server = http.createServer(app);
 const socket = require("socket.io");
 const io = socket(server);
 
-const users = {};
+const rooms = {}; //each room is array of users 
 
 const socketToRoom = {};
 
@@ -18,15 +18,15 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
   socket.on("join room", (roomID) => {
     console.log("join room", socket.id);
-    if (users[roomID]) {
-      users[roomID].push({
+    if (rooms[roomID]) {
+      rooms[roomID].push({
         id: socket.id,
         isAdmin: false,
         mute: false, // should be taken from the front
         video_off: true, // should be taken from the front
       });
     } else {
-      users[roomID] = [
+      rooms[roomID] = [
         {
           id: socket.id,
           isAdmin: true,
@@ -36,7 +36,7 @@ io.on("connection", (socket) => {
       ];
     }
     socketToRoom[socket.id] = roomID;
-    const usersInThisRoom = users[roomID].filter(
+    const usersInThisRoom = rooms[roomID].filter(
       (peer) => peer.id !== socket.id
     );
     socket.emit("all users", usersInThisRoom);
@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
   socket.on("offer", (payload) => {
     // payload : {userToSignal , signal {same sdb} ,callerID}
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const user = room?.find((peer) => peer.id === socket.id);
 
     console.log("offer", user);
@@ -80,13 +80,13 @@ io.on("connection", (socket) => {
     console.log("disconnect", socket.id);
 
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     if (room) {
       room = room?.filter((peer) => peer.id !== socket.id);
-      users[roomID] = room;
+      rooms[roomID] = room;
     }
-    if (users[roomID]?.length > 0) {
-      const usersInThisRoom = users[roomID]?.filter(
+    if (rooms[roomID]?.length > 0) {
+      const usersInThisRoom = rooms[roomID]?.filter(
         (peer) => peer.id !== socket.id
       );
       console.log(usersInThisRoom);
@@ -95,14 +95,14 @@ io.on("connection", (socket) => {
         io.to(peer.id).emit("user-leave", socket.id);
       });
     } else {
-      delete users[roomID];
+      delete rooms[roomID];
     }
-    console.log("rooms", users);
+    console.log("rooms", rooms);
   });
 
   socket.on("kick-out", (userID) => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("kick-out by", caller);
     if (caller.isAdmin) {
@@ -112,7 +112,7 @@ io.on("connection", (socket) => {
   });
   socket.on("end-call", () => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("end-call", caller);
     if (caller.isAdmin) {
@@ -125,7 +125,7 @@ io.on("connection", (socket) => {
 
   socket.on("mute-user", (userID) => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("mute by", caller);
 
@@ -136,7 +136,7 @@ io.on("connection", (socket) => {
   });
   socket.on("unmute-user", (userID) => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("unmute by", caller);
 
@@ -147,7 +147,7 @@ io.on("connection", (socket) => {
   });
   socket.on("mute-all", () => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("mute-all", caller);
     if (caller.isAdmin) {
@@ -159,7 +159,7 @@ io.on("connection", (socket) => {
   });
   socket.on("unmute-all", () => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("unmute-all", caller);
     if (caller.isAdmin) {
@@ -172,7 +172,7 @@ io.on("connection", (socket) => {
 
   socket.on("cam-off-user", (userID) => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("mute by", caller);
 
@@ -189,7 +189,7 @@ io.on("connection", (socket) => {
   });
   socket.on("cam-on-user", (userID) => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("cam-on by", caller);
 
@@ -201,7 +201,7 @@ io.on("connection", (socket) => {
   });
   socket.on("cam-off-all", () => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("cam-on-all", caller);
     if (caller.isAdmin) {
@@ -213,7 +213,7 @@ io.on("connection", (socket) => {
   });
   socket.on("cam-on-all", () => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("cam-on-all", caller);
     if (caller.isAdmin) {
@@ -226,7 +226,7 @@ io.on("connection", (socket) => {
 
   socket.on("remove-track", ({ trackID }) => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("remove track", caller.id, trackID);
     room?.forEach((peer) => {
@@ -242,7 +242,7 @@ io.on("connection", (socket) => {
 
   socket.on("remove-stream", ({ streamID }) => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("stream removed", caller.id, streamID);
     room?.forEach((peer) => {
@@ -258,7 +258,7 @@ io.on("connection", (socket) => {
 
   socket.on("start-share-screen", ({ streamID }) => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("start-share-screen", caller.id, streamID);
     room?.forEach((peer) => {
@@ -274,7 +274,7 @@ io.on("connection", (socket) => {
 
   socket.on("stop-share-screen", () => {
     const roomID = socketToRoom[socket.id];
-    let room = users[roomID];
+    let room = rooms[roomID];
     const caller = room?.find((peer) => peer.id === socket.id);
     console.log("stop-share-screen", caller.id);
     room?.forEach((peer) => {
