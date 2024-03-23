@@ -18,8 +18,8 @@ const Video = ({
   id,
   socket,
 }) => {
-  const realrefs = useRef([]);
-  const refs = useRef([]);
+  const videoTagRefs = useRef([]);
+  const streamsRefs = useRef([]);
   const [forSoundTrackStream, setforSoundTrackStream] = useState([]);
   const [forceMuted, setForceMuted] = useState(false);
   const [forceVideoStoped, setForceVideoStoped] = useState(false);
@@ -32,30 +32,30 @@ const Video = ({
     function handleTrackEvent(e) {
       console.log("from track", e);
       console.log("from track", e.streams[0].getTracks());
-      const existStream = refs.current.find(
+      const existStream = streamsRefs.current.find(
         (stream) => stream.id === e.streams[0].id
       );
       if (!existStream) {
-        refs.current.push(e.streams[0]);
-        setStreams([...refs.current]);
+        streamsRefs.current.push(e.streams[0]);
+        setStreams([...streamsRefs.current]);
         if (e.streams[0].getAudioTracks()[0]) {
-          setforSoundTrackStream([...refs.current, e.streams[0]]);
+          setforSoundTrackStream([...streamsRefs.current, e.streams[0]]);
         }
       }
       //if the server event reviced before the track event
       if (shareScreenStreamId) {
-        const shareScreenStream = refs.current.find(
+        const shareScreenStream = streamsRefs.current.find(
           (stream) => stream.id == shareScreenStreamId
         );
         if (shareScreenStream) {
           console.log("shareScreenStream", shareScreenStream);
-          console.log("shareScreenStream", refs.current);
+          console.log("shareScreenStream", streamsRefs.current);
           newTrackForRemoteShareScreenRef.current = shareScreenStream;
-          const newStreams = refs.current.filter(
+          const newStreams = streamsRefs.current.filter(
             (stream) => stream.id !== shareScreenStreamId
           );
-          refs.current = [...newStreams];
-          setStreams([...refs.current]);
+          streamsRefs.current = [...newStreams];
+          setStreams([...streamsRefs.current]);
           setShareScreenMode((prev) => {
             return { ...prev };
           });
@@ -66,13 +66,13 @@ const Video = ({
 
   useEffect(() => {
     if (removedStreamID) {
-      console.log(refs.current);
-      const newStreams = refs.current.filter(
+      console.log(streamsRefs.current);
+      const newStreams = streamsRefs.current.filter(
         (stream) => stream.id !== removedStreamID
       );
-      refs.current = newStreams;
-      setStreams([...refs.current]);
-      console.log(refs.current);
+      streamsRefs.current = newStreams;
+      setStreams([...streamsRefs.current]);
+      console.log(streamsRefs.current);
       setRemoveStreamObj();
     }
   }, [removedStreamID]);
@@ -81,19 +81,19 @@ const Video = ({
     //if the server event reviced after the track event
     if (shareScreenStreamId) {
       console.log(shareScreenStreamId);
-      const shareScreenStream = refs.current.find(
+      const shareScreenStream = streamsRefs.current.find(
         (stream) => stream.id == shareScreenStreamId
       );
       console.log("shareScreenStream", shareScreenStream);
-      console.log("shareScreenStream", refs.current);
+      console.log("shareScreenStream", streamsRefs.current);
 
       if (shareScreenStream) {
         newTrackForRemoteShareScreenRef.current = shareScreenStream;
-        const newStreams = refs.current.filter(
+        const newStreams = streamsRefs.current.filter(
           (stream) => stream.id !== shareScreenStreamId
         );
-        refs.current = [...newStreams];
-        setStreams([...refs.current]);
+        streamsRefs.current = [...newStreams];
+        setStreams([...streamsRefs.current]);
         setShareScreenMode((prev) => {
           return { ...prev };
         });
@@ -217,7 +217,7 @@ const Video = ({
                 ref={(videoRef) => {
                   if (videoRef && stream) {
                     videoRef.srcObject = stream;
-                    realrefs.current.push(videoRef);
+                    videoTagRefs.current.push(videoRef);
                   }
                 }}
                 borderColor={generateRandomColor()}
@@ -234,7 +234,7 @@ const Video = ({
                 )}
                 <Popover
                   placement="bottomRight"
-                  content={Actions(realrefs.current[index])}
+                  content={Actions(videoTagRefs.current[index])}
                   trigger="click"
                 >
                   <Button
