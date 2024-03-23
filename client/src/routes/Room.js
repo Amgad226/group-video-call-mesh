@@ -220,12 +220,15 @@ const Room = () => {
         });
       }
     } else {
-      peersRef.current.push({
+      const peerObj = {
         peerID: incoming.callerID,
-        peer,
         isAdmin: incoming.isAdmin,
-      });
-      setPeers((peers) => [...peers, { isAdmin: incoming.isAdmin, peer }]);
+        mute: incoming.mute,
+        video_off: incoming.video_off,
+        peer,
+      };
+      peersRef.current.push(peerObj);
+      setPeers((peers) => [...peers, peerObj]);
     }
   }
 
@@ -306,12 +309,15 @@ const Room = () => {
         shareScreenStreamRef.current ?? clientStreamRef.current // stream for new user
       );
       // the peer is the peer of the new user
-      peersRef.current.push({
+      const peerObj = {
         peerID: remotePeer.id,
         isAdmin: remotePeer.isAdmin,
+        mute: remotePeer.mute,
+        video_off: remotePeer.video_off,
         peer,
-      });
-      peers.push({ isAdmin: remotePeer.isAdmin, peer });
+      };
+      peersRef.current.push(peerObj);
+      peers.push(peerObj);
     });
     setPeers(peers);
   }
@@ -605,7 +611,9 @@ const Room = () => {
           {peers.map((peer, index) => {
             return (
               <Video
-                newTrackForRemoteShareScreenRef={newTrackForRemoteShareScreenRef}
+                newTrackForRemoteShareScreenRef={
+                  newTrackForRemoteShareScreenRef
+                }
                 shareScreenStreamId={shareScreenMode.streamId}
                 setShareScreenMode={setShareScreenMode}
                 id={peersRef.current[index].peerID}

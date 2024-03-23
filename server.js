@@ -19,9 +19,21 @@ io.on("connection", (socket) => {
   socket.on("join room", (roomID) => {
     console.log("join room", socket.id);
     if (users[roomID]) {
-      users[roomID].push({ id: socket.id, isAdmin: false });
+      users[roomID].push({
+        id: socket.id,
+        isAdmin: false,
+        mute: false, // should be taken from the front
+        video_off: true, // should be taken from the front
+      });
     } else {
-      users[roomID] = [{ id: socket.id, isAdmin: true }];
+      users[roomID] = [
+        {
+          id: socket.id,
+          isAdmin: true,
+          mute: false, // should be taken from the front
+          video_off: true, // should be taken from the front
+        },
+      ];
     }
     socketToRoom[socket.id] = roomID;
     const usersInThisRoom = users[roomID].filter(
@@ -41,6 +53,8 @@ io.on("connection", (socket) => {
       signal: payload.signal, //new user SDP
       callerID: payload.callerID, // new_user_socket_id
       isAdmin: user.isAdmin,
+      mute: user.mute,
+      video_off: user.video_off,
     });
   });
 
