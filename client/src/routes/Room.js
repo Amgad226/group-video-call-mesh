@@ -51,8 +51,14 @@ const Room = () => {
   });
 
   async function ByForce() {
-    socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    // socketRef.current = io.connect("http://localhost:3001");
+    let baseUrl;
+
+    if (process.env.NODE_ENV === "production") {
+      baseUrl = "https://yorkbritishacademy.net/";
+    } else {
+      baseUrl = "http://localhost:3001";
+    }
+    socketRef.current = io.connect(baseUrl);
 
     getAvaliableUserMedia()
       .then((stream) => {
@@ -235,6 +241,7 @@ const Room = () => {
         isAdmin: incoming.isAdmin,
         voice: incoming.voice,
         video: incoming.video,
+        userName: incoming.userName,
         peer,
       };
       peersRef.current.push(peerObj);
@@ -324,6 +331,7 @@ const Room = () => {
         isAdmin: remotePeer.isAdmin,
         voice: remotePeer.voice,
         video: remotePeer.video,
+        userName: remotePeer.userName,
         peer,
       };
       peersRef.current.push(peerObj);
@@ -619,6 +627,7 @@ const Room = () => {
         )}
         <Container>
           <ClientVideo
+            userName={userName}
             dataChannelsRef={dataChannelsRef}
             videoDeviceNotExist={videoDeviceNotExist}
             clientStreamRef={clientStreamRef}

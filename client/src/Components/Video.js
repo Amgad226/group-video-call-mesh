@@ -294,6 +294,9 @@ const Video = ({
                     Admin
                   </Tag>
                 )}
+                <Tag className={styles.tag} color="blue">
+                  {peerObj.userName}
+                </Tag>
                 {!peerVoiceState && (
                   <FontAwesomeIcon
                     className={styles.remoteIcon}
