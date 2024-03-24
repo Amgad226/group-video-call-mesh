@@ -145,7 +145,7 @@ io.on("connection", (socket) => {
     let room = rooms[roomID];
     const userIndex = room?.findIndex((peer) => peer.id === socket.id);
 
-    if (userIndex !== -1) {
+    if (userIndex !== -1 && room) {
       if (room[userIndex]) {
         const updatedUser = { ...room[userIndex], voice: voice_bool };
         room[userIndex] = updatedUser;
@@ -215,7 +215,7 @@ io.on("connection", (socket) => {
     let room = rooms[roomID];
     const userIndex = room?.findIndex((peer) => peer.id === socket.id);
 
-    if (userIndex !== -1) {
+    if (userIndex !== -1 && room) {
       if (room[userIndex]) {
         const updatedUser = { ...room[userIndex], video: video_bool };
         room[userIndex] = updatedUser;
