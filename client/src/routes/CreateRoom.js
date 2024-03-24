@@ -3,8 +3,8 @@ import { v1 as uuid } from "uuid";
 import styled from "styled-components";
 /**
  * just comment to test ci
- * 
- * 
+ *
+ *
  */
 // Styled container component
 const Container = styled.div`
@@ -42,7 +42,7 @@ const CreateRoom = (props) => {
 
   return (
     <Container>
-      <StyledButton onClick={create}>AAA5 Create room AAA5</StyledButton>
+      <StyledButton onClick={create}>AAA6 Create room AAA6</StyledButton>
     </Container>
   );
 };
