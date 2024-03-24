@@ -17,6 +17,8 @@ import DeviceSelectionModal from "./DeviceSelectionModal";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { checkConnectionState } from "../helpers/checkConnectionState";
+import UserAgentType from "./UserAgentType";
+import { getUserAgent } from "../helpers/getUserAgent";
 
 function ClientVideo({
   userName,
@@ -372,6 +374,7 @@ function ClientVideo({
   return (
     <div className={styles.videoFrame}>
       <div className={styles.tagContainer}>
+        <UserAgentType agentType={getUserAgent()} />
         {isAdmin && (
           <Tag className={styles.tag} color="#f50">
             Admin

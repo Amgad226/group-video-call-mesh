@@ -10,6 +10,7 @@ import {
   faMicrophoneSlash,
   faVideoSlash,
 } from "@fortawesome/free-solid-svg-icons";
+import UserAgentType from "./UserAgentType";
 
 const Video = ({
   dataChannelsRef,
@@ -289,6 +290,7 @@ const Video = ({
                 <SoundVolumeMeter mediaStream={forSoundTrackStream[index]} />
               )}
               <div className={styles.tagContainer}>
+                <UserAgentType agentType={peerObj.userAgent} />
                 {peerObj.isAdmin && (
                   <Tag className={styles.tag} color="#f50">
                     Admin

@@ -12,6 +12,7 @@ import { checkConnectionState } from "../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { isMobileDevice } from "../helpers/isMobileDevice";
+import { getUserAgent } from "../helpers/getUserAgent";
 
 const Room = () => {
   const socketRef = useRef();
@@ -79,7 +80,6 @@ const Room = () => {
             stream.getAudioTracks()[0].getSettings().deviceId
           );
         }
-        console.log(stream.getTracks());
 
         clientStreamRef.current = stream;
 
@@ -92,6 +92,7 @@ const Room = () => {
           userName,
           voice_bool: true, // should ask user for state
           video_bool: false, // should ask user for state
+          userAgent: getUserAgent(),
         });
 
         socketRef.current.on("all users", handleAllUsersEvent);
@@ -242,6 +243,7 @@ const Room = () => {
         voice: incoming.voice,
         video: incoming.video,
         userName: incoming.userName,
+        userAgent: incoming.userAgent,
         peer,
       };
       peersRef.current.push(peerObj);
@@ -332,6 +334,7 @@ const Room = () => {
         voice: remotePeer.voice,
         video: remotePeer.video,
         userName: remotePeer.userName,
+        userAgent: remotePeer.userAgent,
         peer,
       };
       peersRef.current.push(peerObj);
