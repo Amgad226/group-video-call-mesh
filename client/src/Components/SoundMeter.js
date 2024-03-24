@@ -65,32 +65,45 @@ const SoundVolumeMeter = ({ mediaStream }) => {
       }
       if (mediaStream) {
         // mediaStream.getTracks().forEach((track) => {
-          // track.stop();
+        // track.stop();
         // });
         // mediaStream = null;
       }
     };
   }, [mediaStream]);
 
+  const getBackgroundColor = () => {
+    if (volumeLevel < 0.5) {
+      return "green"; // Low volume level
+    } else if (volumeLevel < 0.75) {
+      return "yellow"; // Medium volume level
+    } else {
+      return "red"; // High volume level
+    }
+  };
+
   return (
     <div
       style={{
         width: "100%",
-        height: "5px",
+        height: "7px",
         background: "black",
         position: "relative",
         zIndex: "1",
+        display: "flex",
+        justifyContent: "center",
+        overflow: "hidden",
       }}
     >
       <div
         style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          width: `${volumeLevel * 100}%`,
-          height: "5px",
-          background: "green",
-          transition: "width 0.1s ease-in-out",
+          borderRadius: 5,
+          width: `${volumeLevel * 300}%`,
+          height: "7px",
+          background: `rgb(${volumeLevel * 10 * 255},${
+            255 / (volumeLevel * 10)
+          },0)`,
+          transition: "all 0.2s ease-out",
         }}
       />
     </div>
