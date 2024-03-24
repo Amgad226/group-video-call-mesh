@@ -62,6 +62,7 @@ io.on("connection", (socket) => {
     const roomID = socketToRoom[socket.id];
     let room = rooms[roomID];
     const user = room?.find((peer) => peer.id === socket.id);
+    console.log(user);
 
     console.log("offer", user);
     io.to(payload.userToSignal).emit("offer", {

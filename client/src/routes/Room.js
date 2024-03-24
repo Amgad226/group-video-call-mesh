@@ -355,10 +355,9 @@ const Room = () => {
     removedPeer[0]?.peer.close();
     peersRef.current = newPeers;
     setPeers(
-      peersRef.current.map(({ peer, isAdmin }) => {
+      peersRef.current.map((peerObj) => {
         return {
-          peer,
-          isAdmin,
+          ...peerObj,
         };
       })
     );
