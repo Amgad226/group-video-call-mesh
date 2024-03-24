@@ -256,6 +256,10 @@ const Video = ({
     console.log("dataChannel.OnError:", error);
   };
   var onReceive_ChannelCloseStateChange = function (event) {
+    const newDataChannels = dataChannelsRef.current.filter(
+      (dataChannelObj) => dataChannelObj.id !== id
+    );
+    dataChannelsRef.current = newDataChannels;
     console.log("dataChannel.OnClose:", event);
   };
 
