@@ -34,7 +34,7 @@ const Room = () => {
   const [adminStopCamAll, setAdminStopCamAll] = useState(false);
 
   const history = useHistory();
-  const { roomID } = useParams();
+  const { roomID, userName } = useParams();
 
   const [permissionDenied, setPermissionDenied] = useState();
 
@@ -81,7 +81,12 @@ const Room = () => {
 
         setPermissionDenied(false);
 
-        socketRef.current.emit("join room", roomID);
+        socketRef.current.emit("join room", {
+          roomID,
+          userName,
+          voice_bool: true, // should ask user for state
+          video_bool: false, // should ask user for state
+        });
 
         socketRef.current.on("all users", handleAllUsersEvent);
 

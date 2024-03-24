@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { v1 as uuid } from "uuid";
 import styled from "styled-components";
 /**
  * just comment to test ci
- * 
- * 
+ *
+ *
  */
 // Styled container component
 const Container = styled.div`
@@ -34,10 +34,11 @@ const StyledButton = styled.button`
 
 // CreateRoom component
 const CreateRoom = (props) => {
+  const [userName, setUsername] = useState();
   // Function to create a room
   function create() {
     const id = uuid();
-    props.history.push(`/room/${id}`);
+    props.history.push(`/room/${id}/test`);
   }
 
   return (
