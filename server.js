@@ -16,22 +16,31 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  socket.on("join room", (roomID) => {
-    console.log("join room", socket.id);
+  socket.on("join room", ({ roomID, userName, voice_bool, video_bool }) => {
+    console.log(
+      "join room",
+      socket.id,
+      roomID,
+      userName,
+      voice_bool,
+      video_bool
+    );
     if (rooms[roomID]) {
       rooms[roomID].push({
         id: socket.id,
         isAdmin: false,
-        voice: true, // should be taken from the front
-        video: false, // should be taken from the front
+        voice: voice_bool,
+        video: video_bool,
+        userName,
       });
     } else {
       rooms[roomID] = [
         {
           id: socket.id,
           isAdmin: true,
-          mute: true, // should be taken from the front
-          video: false, // should be taken from the front
+          voice: voice_bool,
+          video: video_bool,
+          userName,
         },
       ];
     }
@@ -55,6 +64,7 @@ io.on("connection", (socket) => {
       isAdmin: user.isAdmin,
       voice: user.voice,
       video: user.video,
+      userName: user.userName,
     });
   });
 
@@ -198,7 +208,7 @@ io.on("connection", (socket) => {
     if (userIndex !== -1) {
       const updatedUser = { ...room[userIndex], video: video_bool };
       room[userIndex] = updatedUser;
-      rooms[roomID] = room; 
+      rooms[roomID] = room;
       // room.forEach((peer) => {
       //   if (peer.id !== socket.id) {
       //     console.log("toggle-video", video_bool);
