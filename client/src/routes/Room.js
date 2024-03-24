@@ -12,6 +12,7 @@ import { checkConnectionState } from "../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { isMobileDevice } from "../helpers/isMobileDevice";
+import { getUserAgent } from "../helpers/getUserAgent";
 
 const Room = () => {
   const socketRef = useRef();
@@ -51,8 +52,14 @@ const Room = () => {
   });
 
   async function ByForce() {
-    socketRef.current = io.connect("https://yorkbritishacademy.net/");
-    // socketRef.current = io.connect("http://localhost:3001");
+    let baseUrl;
+
+    if (process.env.NODE_ENV === "production") {
+      baseUrl = "https://yorkbritishacademy.net/";
+    } else {
+      baseUrl = "http://localhost:3001";
+    }
+    socketRef.current = io.connect(baseUrl);
 
     getAvaliableUserMedia()
       .then((stream) => {
@@ -73,7 +80,6 @@ const Room = () => {
             stream.getAudioTracks()[0].getSettings().deviceId
           );
         }
-        console.log(stream.getTracks());
 
         clientStreamRef.current = stream;
 
@@ -86,6 +92,7 @@ const Room = () => {
           userName,
           voice_bool: true, // should ask user for state
           video_bool: false, // should ask user for state
+          userAgent: getUserAgent(),
         });
 
         socketRef.current.on("all users", handleAllUsersEvent);
@@ -235,6 +242,8 @@ const Room = () => {
         isAdmin: incoming.isAdmin,
         voice: incoming.voice,
         video: incoming.video,
+        userName: incoming.userName,
+        userAgent: incoming.userAgent,
         peer,
       };
       peersRef.current.push(peerObj);
@@ -324,6 +333,8 @@ const Room = () => {
         isAdmin: remotePeer.isAdmin,
         voice: remotePeer.voice,
         video: remotePeer.video,
+        userName: remotePeer.userName,
+        userAgent: remotePeer.userAgent,
         peer,
       };
       peersRef.current.push(peerObj);
@@ -619,6 +630,7 @@ const Room = () => {
         )}
         <Container>
           <ClientVideo
+            userName={userName}
             dataChannelsRef={dataChannelsRef}
             videoDeviceNotExist={videoDeviceNotExist}
             clientStreamRef={clientStreamRef}

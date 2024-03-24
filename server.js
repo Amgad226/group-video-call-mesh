@@ -16,40 +16,46 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  socket.on("join room", ({ roomID, userName, voice_bool, video_bool }) => {
-    console.log(
-      "join room",
-      socket.id,
-      roomID,
-      userName,
-      voice_bool,
-      video_bool
-    );
-    if (rooms[roomID]) {
-      rooms[roomID].push({
-        id: socket.id,
-        isAdmin: false,
-        voice: voice_bool,
-        video: video_bool,
+  socket.on(
+    "join room",
+    ({ roomID, userName, voice_bool, video_bool, userAgent }) => {
+      console.log(
+        "join room",
+        socket.id,
+        roomID,
         userName,
-      });
-    } else {
-      rooms[roomID] = [
-        {
+        voice_bool,
+        video_bool,
+        userAgent
+      );
+      if (rooms[roomID]) {
+        rooms[roomID].push({
           id: socket.id,
-          isAdmin: true,
+          isAdmin: false,
           voice: voice_bool,
           video: video_bool,
           userName,
-        },
-      ];
+          userAgent,
+        });
+      } else {
+        rooms[roomID] = [
+          {
+            id: socket.id,
+            isAdmin: true,
+            voice: voice_bool,
+            video: video_bool,
+            userName,
+            userAgent,
+          },
+        ];
+      }
+      socketToRoom[socket.id] = roomID;
+      const usersInThisRoom = rooms[roomID].filter(
+        (peer) => peer.id !== socket.id
+      );
+      socket.emit("all users", usersInThisRoom);
     }
-    socketToRoom[socket.id] = roomID;
-    const usersInThisRoom = rooms[roomID].filter(
-      (peer) => peer.id !== socket.id
-    );
-    socket.emit("all users", usersInThisRoom);
-  });
+  );
 
   socket.on("offer", (payload) => {
     // payload : {userToSignal , signal {same sdb} ,callerID}
@@ -65,6 +71,7 @@ io.on("connection", (socket) => {
       voice: user.voice,
       video: user.video,
       userName: user.userName,
+      userAgent: user.userAgent,
     });
   });
 
@@ -139,9 +146,12 @@ io.on("connection", (socket) => {
     const userIndex = room?.findIndex((peer) => peer.id === socket.id);
 
     if (userIndex !== -1) {
-      const updatedUser = { ...room[userIndex], voice: voice_bool };
-      room[userIndex] = updatedUser;
-      rooms[roomID] = room;
+      if (room[userIndex]) {
+        const updatedUser = { ...room[userIndex], voice: voice_bool };
+        room[userIndex] = updatedUser;
+        rooms[roomID] = room;
+      }
+
       // room.forEach((peer) => {
       //   if (peer.id !== socket.id) {
       //     console.log("toggle-voice", voice_bool);
@@ -206,9 +216,12 @@ io.on("connection", (socket) => {
     const userIndex = room?.findIndex((peer) => peer.id === socket.id);
 
     if (userIndex !== -1) {
-      const updatedUser = { ...room[userIndex], video: video_bool };
-      room[userIndex] = updatedUser;
-      rooms[roomID] = room;
+      if (room[userIndex]) {
+        const updatedUser = { ...room[userIndex], video: video_bool };
+        room[userIndex] = updatedUser;
+        rooms[roomID] = room;
+      }
+
       // room.forEach((peer) => {
       //   if (peer.id !== socket.id) {
       //     console.log("toggle-video", video_bool);
