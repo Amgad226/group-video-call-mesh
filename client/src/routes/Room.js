@@ -18,6 +18,7 @@ const Room = () => {
   const userVideo = useRef();
   const clientStreamRef = useRef(); // userStream
   const shareScreenStreamRef = useRef(); // for share screen insted of the user video
+  const dataChannelsRef = useRef([]);
 
   const newTrackForLocalShareScreenRef = useRef();
 
@@ -110,10 +111,6 @@ const Room = () => {
           "share-screen-mode-stop",
           handleShareScreenModeStop
         );
-
-        socketRef.current.on("user-video-toggled", handleUserVideoToggled);
-
-        socketRef.current.on("user-voice-toggled", handleUserVoiceToggled);
       })
 
       .catch((err) => {
@@ -131,6 +128,10 @@ const Room = () => {
 
   function callUser(userID, socket_id, clientStream) {
     const peer = createPeer(userID, true);
+    dataChannelsRef.current.push({
+      id: userID,
+      dataChannel: Create_DataChannel(socket_id, peer),
+    });
     clientStream
       .getTracks()
       .forEach((track) => peer.addTrack(track, clientStream));
@@ -392,59 +393,6 @@ const Room = () => {
     newTrackForRemoteShareScreenRef.current = undefined;
   }
 
-  function handleUserVideoToggled(incoming) {
-    console.log(incoming);
-    const index = peersRef.current.findIndex(
-      (peerObj) => peerObj.peerID === incoming.callerID
-    );
-
-    if (index !== -1) {
-      peersRef.current[index] = {
-        ...peersRef.current[index],
-        video: incoming.video_bool,
-      };
-      setPeers((peers) => {
-        const updatedPeers = [...peers];
-        if (updatedPeers[index]) {
-          updatedPeers[index] = {
-            ...updatedPeers[index],
-            video: incoming.video_bool,
-          };
-          console.log(updatedPeers[index]);
-        }
-
-        return updatedPeers;
-      });
-    }
-  }
-
-  function handleUserVoiceToggled(incoming) {
-    console.log(incoming);
-
-    const index = peersRef.current.findIndex(
-      (peerObj) => peerObj.peerID === incoming.callerID
-    );
-
-    if (index !== -1) {
-      peersRef.current[index] = {
-        ...peersRef.current[index],
-        voice: incoming.voice_bool,
-      };
-      setPeers((peers) => {
-        const updatedPeers = [...peers];
-        if (updatedPeers[index]) {
-          updatedPeers[index] = {
-            ...updatedPeers[index],
-            voice: incoming.voice_bool,
-          };
-          console.log(updatedPeers[index]);
-        }
-
-        return updatedPeers;
-      });
-    }
-  }
-
   const addShareScreenWithNewTrack = () => {
     navigator.mediaDevices
       .getDisplayMedia({
@@ -500,6 +448,21 @@ const Room = () => {
     setShareScreenMode({ owner: false, streamId: null });
   };
 
+  function Create_DataChannel(name, peer) {
+    const dataChannelOptions = {
+      ordered: false, // do not guarantee order
+      maxPacketLifeTime: 3000, // in milliseconds
+    };
+
+    var channelname = name;
+    const Send_dataChannel = peer.createDataChannel(
+      channelname,
+      dataChannelOptions
+    );
+    console.log("Created DataChannel dataChannel = " + Send_dataChannel);
+
+    return Send_dataChannel;
+  }
   return (
     <>
       <Modal
@@ -651,6 +614,7 @@ const Room = () => {
         )}
         <Container>
           <ClientVideo
+            dataChannelsRef={dataChannelsRef}
             videoDeviceNotExist={videoDeviceNotExist}
             clientStreamRef={clientStreamRef}
             shareScreenStreamRef={shareScreenStreamRef}
@@ -669,6 +633,7 @@ const Room = () => {
           {peers.map((peer, index) => {
             return (
               <Video
+                dataChannelsRef={dataChannelsRef}
                 newTrackForRemoteShareScreenRef={
                   newTrackForRemoteShareScreenRef
                 }

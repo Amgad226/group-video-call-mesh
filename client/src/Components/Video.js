@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 const Video = ({
+  dataChannelsRef,
   newTrackForRemoteShareScreenRef,
   setShareScreenMode,
   shareScreenStreamId,
@@ -28,45 +29,30 @@ const Video = ({
   const [forceMuted, setForceMuted] = useState(false);
   const [forceVideoStoped, setForceVideoStoped] = useState(false);
   const [streams, setStreams] = useState([]);
+  const [peerVideoState, setPeerVideoState] = useState(peerObj.video);
+  const [peerVoiceState, setPeerVoiceState] = useState(peerObj.voice);
 
+  const [dataChannelCreated, setDataChannelCreated] = useState(false);
   useEffect(() => {
     console.log(peerObj);
     peerObj.peer.ontrack = handleTrackEvent;
-
-    function handleTrackEvent(e) {
-      console.log("from track", e);
-      console.log("from track", e.streams[0].getTracks());
-      const existStream = streamsRefs.current.find(
-        (stream) => stream.id === e.streams[0].id
-      );
-      if (!existStream) {
-        streamsRefs.current.push(e.streams[0]);
-        setStreams([...streamsRefs.current]);
-        if (e.streams[0].getAudioTracks()[0]) {
-          setforSoundTrackStream([...streamsRefs.current, e.streams[0]]);
-        }
-      }
-      //if the server event reviced before the track event
-      if (shareScreenStreamId) {
-        const shareScreenStream = streamsRefs.current.find(
-          (stream) => stream.id == shareScreenStreamId
-        );
-        if (shareScreenStream) {
-          console.log("shareScreenStream", shareScreenStream);
-          console.log("shareScreenStream", streamsRefs.current);
-          newTrackForRemoteShareScreenRef.current = shareScreenStream;
-          const newStreams = streamsRefs.current.filter(
-            (stream) => stream.id !== shareScreenStreamId
-          );
-          streamsRefs.current = [...newStreams];
-          setStreams([...streamsRefs.current]);
-          setShareScreenMode((prev) => {
-            return { ...prev };
-          });
-        }
-      }
-    }
+    peerObj.peer.ondatachannel = receiveChannelCallback;
   }, [shareScreenStreamId]);
+
+  useEffect(() => {
+    const dataChannelObj = dataChannelsRef.current.find(
+      (channelObj) => channelObj.id === id
+    );
+    if (dataChannelObj && !dataChannelCreated) {
+      setDataChannelCreated(true);
+    }
+    if (dataChannelCreated && dataChannelObj) {
+      dataChannelObj.dataChannel.onopen = onReceive_ChannelOpenState;
+      dataChannelObj.dataChannel.onmessage = onReceive_ChannelMessageCallback;
+      dataChannelObj.dataChannel.onerror = onReceive_ChannelErrorState;
+      dataChannelObj.dataChannel.onclose = onReceive_ChannelCloseStateChange;
+    }
+  }, [dataChannelCreated]);
 
   useEffect(() => {
     if (removedStreamID) {
@@ -200,11 +186,78 @@ const Video = ({
       )}
     </>
   );
+  const handleTrackEvent = (e) => {
+    console.log("from track", e);
+    console.log("from track", e.streams[0].getTracks());
+    const existStream = streamsRefs.current.find(
+      (stream) => stream.id === e.streams[0].id
+    );
+    if (!existStream) {
+      streamsRefs.current.push(e.streams[0]);
+      setStreams([...streamsRefs.current]);
+      if (e.streams[0].getAudioTracks()[0]) {
+        setforSoundTrackStream([...streamsRefs.current, e.streams[0]]);
+      }
+    }
+    //if the server event reviced before the track event
+    if (shareScreenStreamId) {
+      const shareScreenStream = streamsRefs.current.find(
+        (stream) => stream.id == shareScreenStreamId
+      );
+      if (shareScreenStream) {
+        console.log("shareScreenStream", shareScreenStream);
+        console.log("shareScreenStream", streamsRefs.current);
+        newTrackForRemoteShareScreenRef.current = shareScreenStream;
+        const newStreams = streamsRefs.current.filter(
+          (stream) => stream.id !== shareScreenStreamId
+        );
+        streamsRefs.current = [...newStreams];
+        setStreams([...streamsRefs.current]);
+        setShareScreenMode((prev) => {
+          return { ...prev };
+        });
+      }
+    }
+  };
 
-  useEffect(() => {
-    const peer = peerObj.peer.getRemoteStreams();
-    console.log(peer[0]?.getTracks());
-  }, [peerObj]);
+  const receiveChannelCallback = function (event) {
+    const Receive_dataChannel = event.channel;
+    dataChannelsRef.current.push({ id, dataChannel: Receive_dataChannel });
+    setDataChannelCreated(true);
+  };
+  var onReceive_ChannelOpenState = function (event) {
+    console.log("dataChannel.OnOpen", event);
+    // event.srcElement.send("hello from reciver");
+  };
+  var onReceive_ChannelMessageCallback = function (event) {
+    console.log("dataChannel.message", event);
+    const data = JSON.parse(event.data);
+    console.log(data);
+    const messageType = data.type;
+    switch (messageType) {
+      case "video-toggle":
+        {
+          const toggleBool = data.data.video_bool;
+          setPeerVideoState(toggleBool);
+        }
+        break;
+      case "voice-toggle":
+        {
+          const toggleBool = data.data.voice_bool;
+          setPeerVoiceState(toggleBool);
+        }
+        break;
+
+      default:
+        break;
+    }
+  };
+  var onReceive_ChannelErrorState = function (error) {
+    console.log("dataChannel.OnError:", error);
+  };
+  var onReceive_ChannelCloseStateChange = function (event) {
+    console.log("dataChannel.OnClose:", event);
+  };
 
   return (
     <>
@@ -237,13 +290,13 @@ const Video = ({
                     Admin
                   </Tag>
                 )}
-                {!peerObj.voice && (
+                {!peerVoiceState && (
                   <FontAwesomeIcon
                     className={styles.remoteIcon}
                     icon={faMicrophoneSlash}
                   />
                 )}
-                {!peerObj.video && (
+                {!peerVideoState && (
                   <FontAwesomeIcon
                     className={styles.remoteIcon}
                     icon={faVideoSlash}

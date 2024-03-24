@@ -132,15 +132,15 @@ io.on("connection", (socket) => {
       const updatedUser = { ...room[userIndex], voice: voice_bool };
       room[userIndex] = updatedUser;
       rooms[roomID] = room;
-      room.forEach((peer) => {
-        if (peer.id !== socket.id) {
-          console.log("toggle-voice", voice_bool);
-          io.to(peer.id).emit("user-voice-toggled", {
-            callerID: socket.id,
-            voice_bool,
-          });
-        }
-      });
+      // room.forEach((peer) => {
+      //   if (peer.id !== socket.id) {
+      //     console.log("toggle-voice", voice_bool);
+      //     io.to(peer.id).emit("user-voice-toggled", {
+      //       callerID: socket.id,
+      //       voice_bool,
+      //     });
+      //   }
+      // });
     }
   });
   socket.on("mute-user", (userID) => {
@@ -198,17 +198,17 @@ io.on("connection", (socket) => {
     if (userIndex !== -1) {
       const updatedUser = { ...room[userIndex], video: video_bool };
       room[userIndex] = updatedUser;
-      rooms[roomID] = room;
-      room.forEach((peer) => {
-        if (peer.id !== socket.id) {
-          console.log("toggle-video", video_bool);
+      rooms[roomID] = room; 
+      // room.forEach((peer) => {
+      //   if (peer.id !== socket.id) {
+      //     console.log("toggle-video", video_bool);
 
-          io.to(peer.id).emit("user-video-toggled", {
-            callerID: socket.id,
-            video_bool,
-          });
-        }
-      });
+      //     io.to(peer.id).emit("user-video-toggled", {
+      //       callerID: socket.id,
+      //       video_bool,
+      //     });
+      //   }
+      // });
     }
   });
   socket.on("cam-off-user", (userID) => {

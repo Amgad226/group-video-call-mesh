@@ -19,6 +19,7 @@ import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { checkConnectionState } from "../helpers/checkConnectionState";
 
 function ClientVideo({
+  dataChannelsRef,
   videoDeviceNotExist,
   forceMuted,
   forceVideoStoped,
@@ -82,11 +83,35 @@ function ClientVideo({
   useEffect(() => {
     if (!video && clientStreamRef.current) {
       socket.emit("toggle-video", { video_bool: false });
+      dataChannelsRef.current.forEach(({ dataChannel }) => {
+        if (dataChannel.readyState == "open") {
+          dataChannel.send(
+            JSON.stringify({
+              type: "video-toggle",
+              data: {
+                video_bool: false,
+              },
+            })
+          );
+        }
+      });
       clientStreamRef.current
         .getVideoTracks()
         .forEach((track) => (track.enabled = false));
     } else if (video && clientStreamRef.current) {
       socket.emit("toggle-video", { video_bool: true });
+      dataChannelsRef.current.forEach(({ dataChannel }) => {
+        if (dataChannel.readyState == "open") {
+          dataChannel.send(
+            JSON.stringify({
+              type: "video-toggle",
+              data: {
+                video_bool: true,
+              },
+            })
+          );
+        }
+      });
       clientStreamRef.current
         ?.getVideoTracks()
         .forEach((track) => (track.enabled = true));
@@ -106,11 +131,35 @@ function ClientVideo({
   useEffect(() => {
     if (!unMute && clientStreamRef.current) {
       socket.emit("toggle-voice", { voice_bool: false });
+      dataChannelsRef.current.forEach(({ dataChannel }) => {
+        if (dataChannel.readyState == "open") {
+          dataChannel.send(
+            JSON.stringify({
+              type: "voice-toggle",
+              data: {
+                voice_bool: false,
+              },
+            })
+          );
+        }
+      });
       clientStreamRef.current
         .getAudioTracks()
         .forEach((track) => (track.enabled = false));
     } else if (unMute && clientStreamRef.current) {
       socket.emit("toggle-voice", { voice_bool: true });
+      dataChannelsRef.current.forEach(({ dataChannel }) => {
+        if (dataChannel.readyState == "open") {
+          dataChannel.send(
+            JSON.stringify({
+              type: "voice-toggle",
+              data: {
+                voice_bool: true,
+              },
+            })
+          );
+        }
+      });
       clientStreamRef.current
         ?.getAudioTracks()
         .forEach((track) => (track.enabled = true));
