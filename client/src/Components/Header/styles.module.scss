@@ -1,0 +1,42 @@
+.header {
+  width: 100%;
+  height: 60px;
+  position: sticky;
+  background-color: #01989f;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0 0 20px 20px;
+  .sessionTitle {
+    width: 100%;
+    font-size: 30px;
+    color: white;
+    font-weight: 500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .usersPresentsContainer {
+    width: 30%;
+    .popoverContainer {
+      width: min-content;
+      margin-inline-start: 20px;
+      .usersPresents {
+        display: flex;
+        justify-content: start;
+        align-items: center;
+        padding: 20px;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+      }
+    }
+  }
+
+  .actionsContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30%;
+  }
+}

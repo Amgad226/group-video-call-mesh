@@ -1,47 +1,29 @@
-import {
-  faDesktop,
-  faCamera,
-  faMicrophoneSlash,
-  faVideoSlash,
-  faExchangeAlt,
-  faGears,
-} from "@fortawesome/free-solid-svg-icons";
+import { faGears } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Tag } from "antd";
 import React, { useEffect, useState } from "react";
 import img from "../assets/test.png";
-import styles from "./styles.module.css";
-import { isMobileDevice } from "../helpers/isMobileDevice";
-import { Button, Tag } from "antd";
-import SoundVolumeMeter from "./SoundMeter";
-import DeviceSelectionModal from "./DeviceSelectionModal";
-import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
-import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { checkConnectionState } from "../helpers/checkConnectionState";
-import UserAgentType from "./UserAgentType";
 import { getUserAgent } from "../helpers/getUserAgent";
+import DeviceSelectionModal from "./DeviceSelectionModal";
+import SoundVolumeMeter from "./SoundMeter";
+import UserAgentType from "./UserAgentType";
+import styles from "./styles.module.css";
 
 function ClientVideo({
   userName,
-  dataChannelsRef,
-  videoDeviceNotExist,
-  forceMuted,
-  forceVideoStoped,
   userVideo,
   peers,
   clientStreamRef,
-  shareScreenStreamRef,
   isAdmin,
   activeVideoDevice,
   setActiveVideoDevice,
   activeAudioDevice,
   setActiveAudioDevice,
-  socket,
+  screenSharing,
+  video,
 }) {
   const [showModal, setShowModal] = useState(false);
-  const [video, setVideo] = useState(false);
-  const [unMute, setUnMute] = useState(false);
-  const [screenSharing, setScreenSharing] = useState(false);
-  const [initDone, setInitDone] = useState(false);
   const [hasMultipleDevices, setHasMultipleDevices] = useState(false);
   const [devices, setDevices] = useState([]);
 
@@ -68,197 +50,14 @@ function ClientVideo({
   }, []);
 
   useEffect(() => {
-    setUnMute(!forceMuted && unMute);
-  }, [forceMuted]);
-
-  useEffect(() => {
-    setVideo(!forceVideoStoped && video);
-  }, [forceVideoStoped]);
-
-  useEffect(() => {
-    if (clientStreamRef.current && !initDone) {
-      setInitDone(true);
-      setVideo(!!clientStreamRef.current.getVideoTracks()[0]?.enabled);
-      setUnMute(!!clientStreamRef.current.getAudioTracks()[0]?.enabled);
-    }
-  }, [clientStreamRef.current]);
-
-  useEffect(() => {
-    if (!video && clientStreamRef.current) {
-      socket.emit("toggle-video", { video_bool: false });
-      dataChannelsRef.current.forEach(({ dataChannel }) => {
-        if (dataChannel.readyState == "open") {
-          dataChannel.send(
-            JSON.stringify({
-              type: "video-toggle",
-              data: {
-                video_bool: false,
-              },
-            })
-          );
-        }
+    checkMultiDevices()
+      .then((result) => {
+        setHasMultipleDevices(result);
+      })
+      .catch((error) => {
+        console.error("Error checking multiple cameras:", error);
       });
-      clientStreamRef.current
-        .getVideoTracks()
-        .forEach((track) => (track.enabled = false));
-    } else if (video && clientStreamRef.current) {
-      socket.emit("toggle-video", { video_bool: true });
-      dataChannelsRef.current.forEach(({ dataChannel }) => {
-        if (dataChannel.readyState == "open") {
-          dataChannel.send(
-            JSON.stringify({
-              type: "video-toggle",
-              data: {
-                video_bool: true,
-              },
-            })
-          );
-        }
-      });
-      clientStreamRef.current
-        ?.getVideoTracks()
-        .forEach((track) => (track.enabled = true));
-    }
-    // to disable the sharescreen if exist
-    if (!video && shareScreenStreamRef.current) {
-      shareScreenStreamRef.current
-        .getVideoTracks()
-        .forEach((track) => (track.enabled = false));
-    } else if (video && shareScreenStreamRef.current) {
-      shareScreenStreamRef.current
-        ?.getVideoTracks()
-        .forEach((track) => (track.enabled = true));
-    }
-  }, [video]);
-
-  useEffect(() => {
-    if (!unMute && clientStreamRef.current) {
-      socket.emit("toggle-voice", { voice_bool: false });
-      dataChannelsRef.current.forEach(({ dataChannel }) => {
-        if (dataChannel.readyState == "open") {
-          dataChannel.send(
-            JSON.stringify({
-              type: "voice-toggle",
-              data: {
-                voice_bool: false,
-              },
-            })
-          );
-        }
-      });
-      clientStreamRef.current
-        .getAudioTracks()
-        .forEach((track) => (track.enabled = false));
-    } else if (unMute && clientStreamRef.current) {
-      socket.emit("toggle-voice", { voice_bool: true });
-      dataChannelsRef.current.forEach(({ dataChannel }) => {
-        if (dataChannel.readyState == "open") {
-          dataChannel.send(
-            JSON.stringify({
-              type: "voice-toggle",
-              data: {
-                voice_bool: true,
-              },
-            })
-          );
-        }
-      });
-      clientStreamRef.current
-        ?.getAudioTracks()
-        .forEach((track) => (track.enabled = true));
-    }
-
-    // to disable the sharescreen if exist
-    if (!unMute && shareScreenStreamRef.current) {
-      shareScreenStreamRef.current
-        .getAudioTracks()
-        .forEach((track) => (track.enabled = false));
-    } else if (unMute && shareScreenStreamRef.current) {
-      shareScreenStreamRef.current
-        ?.getAudioTracks()
-        .forEach((track) => (track.enabled = true));
-    }
-  }, [unMute]);
-
-  const setShareScreen = () => {
-    // to stop any prev share screen tracks if exist
-    if (shareScreenStreamRef.current?.getVideoTracks().length > 0) {
-      shareScreenStreamRef.current.getVideoTracks()[0].stop();
-      shareScreenStreamRef.current = undefined;
-    }
-    if (!screenSharing) {
-      navigator.mediaDevices
-        .getDisplayMedia({
-          audio: true,
-          video: true,
-        })
-        .then((shareStreem) => {
-          const shareStreemAudioTrack = shareStreem.getAudioTracks()[0];
-
-          if (shareStreemAudioTrack) {
-            shareStreem.removeTrack(shareStreemAudioTrack);
-          } else {
-            shareStreem.addTrack(clientStreamRef.current.getAudioTracks()[0]);
-          }
-
-          const screenSharingTrack = shareStreem.getVideoTracks()[0];
-          peers?.forEach((peerObj) => {
-            const coneectionState = peerObj.peer.connectionState;
-
-            if (checkConnectionState(coneectionState)) {
-              const sender = peerObj.peer
-                .getSenders()
-                .find((s) => s?.track?.kind === "video");
-
-              console.log("audio", shareStreemAudioTrack);
-              if (sender) {
-                sender.replaceTrack(screenSharingTrack);
-              }
-            }
-          });
-          setScreenSharing(true);
-          setVideo(true);
-          screenSharingTrack.onended = () => {
-            endShareScreen();
-          };
-
-          userVideo.current.srcObject = shareStreem;
-          shareScreenStreamRef.current = shareStreem;
-        })
-        .catch((e) => {
-          console.log(e);
-        });
-    } else if (screenSharing) {
-      endShareScreen();
-    }
-  };
-
-  const endShareScreen = () => {
-    const clientStreamVideo = clientStreamRef.current.getVideoTracks()[0];
-
-    peers?.forEach((peerObj) => {
-      const coneectionState = peerObj.peer.connectionState;
-
-      if (checkConnectionState(coneectionState)) {
-        const sender = peerObj.peer
-          .getSenders()
-          .find((s) => s.track?.kind === "video");
-        if (clientStreamVideo) {
-          sender.replaceTrack(clientStreamVideo);
-        } else {
-          const fakeVideoTrack = createFakeVideoTrack();
-          sender.replaceTrack(fakeVideoTrack);
-        }
-      }
-    });
-    setScreenSharing(false);
-    setVideo(false);
-    userVideo.current.srcObject = clientStreamRef.current;
-    // getAvaliableUserMedia().then((stream) => {
-    //   clientStreamRef.current = stream;
-    //
-    // });
-  };
+  }, []);
 
   const checkMultiDevices = async () => {
     try {
@@ -356,16 +155,6 @@ function ClientVideo({
     });
   };
 
-  useEffect(() => {
-    checkMultiDevices()
-      .then((result) => {
-        setHasMultipleDevices(result);
-      })
-      .catch((error) => {
-        console.error("Error checking multiple cameras:", error);
-      });
-  }, []);
-
   const handleDeviceSelect = (device) => {
     switchDevice(device.deviceId, device.kind);
     setShowModal(false);
@@ -399,60 +188,8 @@ function ClientVideo({
             : {}
         }
       />
-
       {!video && !screenSharing && <img src={img} className={styles.alt} />}
       <div className={styles.acitons}>
-        <Button
-          style={{
-            opacity: forceMuted ? 0.5 : 1,
-          }}
-          type="text"
-          disabled={forceMuted}
-          className={styles.button}
-        >
-          <FontAwesomeIcon
-            onClick={() => {
-              if (!forceMuted) setUnMute(!unMute);
-            }}
-            className={`${styles.icon} ${!unMute && styles.danger}`}
-            icon={faMicrophoneSlash}
-          />
-        </Button>
-        <Button
-          type="text"
-          disabled={(forceVideoStoped || videoDeviceNotExist) && !screenSharing}
-          className={styles.button}
-          style={{
-            opacity: forceVideoStoped ? 0.5 : 1,
-          }}
-        >
-          <FontAwesomeIcon
-            onClick={() => {
-              if (!forceVideoStoped) setVideo(!video);
-            }}
-            className={`${styles.icon} ${!video && styles.danger}`}
-            icon={faVideoSlash}
-          />
-        </Button>
-        {!isMobileDevice() && (
-          <Button
-            disabled={forceVideoStoped}
-            type="text"
-            className={styles.button}
-            style={{
-              opacity: forceVideoStoped ? 0.5 : 1,
-            }}
-          >
-            <FontAwesomeIcon
-              onClick={() => {
-                if (!forceVideoStoped) setShareScreen();
-              }}
-              className={`${styles.icon} ${screenSharing && styles.active}`}
-              icon={faDesktop}
-            />
-          </Button>
-        )}
-
         <>
           {hasMultipleDevices && (
             <>

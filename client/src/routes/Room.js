@@ -1,33 +1,30 @@
-import { Button, Modal, Popover, Space, Typography } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import io from "socket.io-client";
 import ClientVideo from "../Components/ClientVideo";
 import { Container } from "../Components/Container";
+import ControlBar from "../Components/ControlBar/ControlBar";
+import Header from "../Components/Header/Header";
+import PermissionsModal from "../Components/PermissionsModal/PermissionsModal";
+import SettingsModal from "../Components/SettingsModal/SettingsModal";
 import ShareScreen from "../Components/ShareScreen";
 import Video from "../Components/Video";
 import { iceConfig } from "../config/iceConfig";
 import { checkConnectionState } from "../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
-import { isMobileDevice } from "../helpers/isMobileDevice";
 import { getUserAgent } from "../helpers/getUserAgent";
 import styles from "./styles.module.scss";
-import { FullScreenButton } from "../Components/FullScreen/FullScreen";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUserCheck } from "@fortawesome/free-solid-svg-icons";
+
 const Room = () => {
   const socketRef = useRef();
   const userVideo = useRef();
-  const clientStreamRef = useRef(); // userStream
-  const shareScreenStreamRef = useRef(); // for share screen insted of the user video
+  const clientStreamRef = useRef();
+  const shareScreenStreamRef = useRef();
   const dataChannelsRef = useRef([]);
-
   const newTrackForLocalShareScreenRef = useRef();
-
   const newTrackForRemoteShareScreenRef = useRef();
-
   const peersRef = useRef([]);
 
   const [peers, setPeers] = useState([]);
@@ -36,23 +33,22 @@ const Room = () => {
   const [forceVideoStoped, setForceVideoStoped] = useState(false);
   const [adminMuteAll, setAdminMuteAll] = useState(false);
   const [adminStopCamAll, setAdminStopCamAll] = useState(false);
-
-  const history = useHistory();
-  const { roomID, userName } = useParams();
-
-  const [permissionDenied, setPermissionDenied] = useState();
-
   const [activeVideoDevice, setActiveVideoDevice] = useState(null);
   const [activeAudioDevice, setActiveAudioDevice] = useState(null);
-
   const [videoDeviceNotExist, setVideoDeviceNotExist] = useState(false);
-
   const [removedStreamObj, setRemoveStreamObj] = useState();
-
   const [shareScreenMode, setShareScreenMode] = useState({
     owner: false,
     streamId: null,
   });
+  const [settingsModalOpen, setSettingModalOpen] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState();
+  const [unMute, setUnMute] = useState(false);
+  const [video, setVideo] = useState(false);
+  const [screenSharing, setScreenSharing] = useState(false);
+
+  const history = useHistory();
+  const { roomID, userName } = useParams();
 
   async function ByForce() {
     let baseUrl;
@@ -167,13 +163,11 @@ const Room = () => {
   }
 
   function handleRecieveCall(incoming) {
-    console.log(incoming);
     let peer;
     const existingPeerObj = peersRef.current.find(
       (peerRef) => peerRef.peerID === incoming.callerID
     );
 
-    console.log(existingPeerObj);
     if (existingPeerObj) {
       peer = existingPeerObj.peer;
     } else {
@@ -402,7 +396,6 @@ const Room = () => {
   }
 
   function handleShareScreenMode({ ownerID, streamID }) {
-    console.log({ ownerID, streamID });
     setShareScreenMode({ owner: false, streamId: streamID });
   }
 
@@ -443,7 +436,6 @@ const Room = () => {
     newTrackForLocalShareScreenRef.current
       .getTracks()
       .forEach((track) => track.stop());
-    // need to remove track also
     peersRef.current.forEach((peerObj) => {
       const coneectionState = peerObj.peer.connectionState;
       if (checkConnectionState(coneectionState)) {
@@ -482,167 +474,21 @@ const Room = () => {
     return Send_dataChannel;
   }
 
-  const UsersPresents = ({ peers }) => {
-    return (
-      <>
-        {peers.map((peer) => {
-          return (
-            <div>
-              {peer.userName} - {peer.isAdmin ? "admin" : "user"}
-            </div>
-          );
-        })}
-      </>
-    );
-  };
-
   return (
     <>
-      <Modal
-        centered
-        onOk={() => {
-          window.location.reload();
-        }}
-        okText="Retry"
-        cancelButtonProps={{
-          style: {
-            display: "none",
-          },
-        }}
-        closable={false}
-        title="Need Permissions"
-        open={!!permissionDenied}
-      >
-        <p>You have to enable video and audio permission to use our app</p>
-        {permissionDenied}
-      </Modal>
+      <SettingsModal
+        adminMuteAll={adminMuteAll}
+        adminStopCamAll={adminStopCamAll}
+        iAdmin={iAdmin}
+        setAdminMuteAll={setAdminMuteAll}
+        setAdminStopCamAll={setAdminStopCamAll}
+        setSettingModalOpen={setSettingModalOpen}
+        settingsModalOpen={settingsModalOpen}
+        socketRef={socketRef}
+      />
+      <PermissionsModal permissionDenied={permissionDenied} />
       <div className={styles.container}>
-        <div className={styles.header}>
-          <Popover
-            trigger={"hover"}
-            placement="bottomRight"
-            content={<UsersPresents peers={peers} />}
-            title="Present Users"
-            arrow={false}
-            style={{ padding: 10 }}
-          >
-            <Space size={5} className={styles.usersPresents}>
-              {peers.length}
-              <FontAwesomeIcon icon={faUserCheck} />
-            </Space>
-          </Popover>
-          <div className={styles.sessionTitle}>York British Academey</div>
-          <FullScreenButton />
-        </div>
-        <Space
-          style={{
-            width: "100%",
-            height: "50px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {!isMobileDevice() && !shareScreenMode.streamId && (
-            <Button
-              type="primary"
-              size="large"
-              onClick={addShareScreenWithNewTrack}
-            >
-              Add Share Screen in new Track
-            </Button>
-          )}
-          {!isMobileDevice() &&
-            shareScreenMode.streamId &&
-            shareScreenMode.owner && (
-              <Button
-                type="primary"
-                size="large"
-                danger
-                onClick={stopShareScreenWithNewTrack}
-              >
-                Stop Sharing
-              </Button>
-            )}
-          <Button
-            size="large"
-            danger
-            type="default"
-            onClick={() => {
-              history.push("/");
-              clientStreamRef.current?.getTracks()?.forEach((track) => {
-                console.log(track);
-                track.stop();
-              });
-            }}
-          >
-            Leave Room
-          </Button>
-          {iAdmin && (
-            <>
-              <Button
-                type="primary"
-                size="large"
-                danger
-                onClick={() => {
-                  socketRef.current.emit("end-call");
-                }}
-              >
-                End Room For All
-              </Button>
-              {adminMuteAll && (
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={() => {
-                    setAdminMuteAll(false);
-                    socketRef.current.emit("unmute-all");
-                  }}
-                >
-                  Enable Talk
-                </Button>
-              )}
-              {!adminMuteAll && (
-                <Button
-                  type="primary"
-                  size="large"
-                  danger
-                  onClick={() => {
-                    setAdminMuteAll(true);
-                    socketRef.current.emit("mute-all");
-                  }}
-                >
-                  Disable Talk
-                </Button>
-              )}
-              {adminStopCamAll && (
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={() => {
-                    setAdminStopCamAll(false);
-                    socketRef.current.emit("cam-on-all");
-                  }}
-                >
-                  Enable Video
-                </Button>
-              )}
-              {!adminStopCamAll && (
-                <Button
-                  type="primary"
-                  size="large"
-                  danger
-                  onClick={() => {
-                    setAdminStopCamAll(true);
-                    socketRef.current.emit("cam-off-all");
-                  }}
-                >
-                  Disable Video
-                </Button>
-              )}
-            </>
-          )}
-        </Space>
+        <Header peers={peers} />
         {shareScreenMode.streamId && (
           <>
             <ShareScreen
@@ -657,22 +503,17 @@ const Room = () => {
         <Container>
           <ClientVideo
             userName={userName}
-            dataChannelsRef={dataChannelsRef}
-            videoDeviceNotExist={videoDeviceNotExist}
-            clientStreamRef={clientStreamRef}
-            shareScreenStreamRef={shareScreenStreamRef}
             userVideo={userVideo}
             peers={peers}
+            clientStreamRef={clientStreamRef}
             isAdmin={iAdmin}
-            forceMuted={forceMuted}
-            forceVideoStoped={forceVideoStoped}
+            activeAudioDevice={activeAudioDevice}
             activeVideoDevice={activeVideoDevice}
             setActiveVideoDevice={setActiveVideoDevice}
-            activeAudioDevice={activeAudioDevice}
             setActiveAudioDevice={setActiveAudioDevice}
-            socket={socketRef.current}
+            screenSharing={screenSharing}
+            video={video}
           />
-
           {peers.map((peer, index) => {
             return (
               <Video
@@ -700,6 +541,29 @@ const Room = () => {
             );
           })}
         </Container>
+        <ControlBar
+          addShareScreenWithNewTrack={addShareScreenWithNewTrack}
+          clientStreamRef={clientStreamRef}
+          setSettingModalOpen={setSettingModalOpen}
+          settingsModalOpen={settingsModalOpen}
+          shareScreenMode={shareScreenMode}
+          socketRef={socketRef}
+          stopShareScreenWithNewTrack={stopShareScreenWithNewTrack}
+          dataChannelsRef={dataChannelsRef}
+          forceMuted={forceMuted}
+          forceVideoStoped={forceVideoStoped}
+          iAdmin={iAdmin}
+          peers={peers}
+          shareScreenStreamRef={shareScreenStreamRef}
+          userVideo={userVideo}
+          videoDeviceNotExist={videoDeviceNotExist}
+          screenSharing={screenSharing}
+          setScreenSharing={setScreenSharing}
+          setUnMute={setUnMute}
+          setVideo={setVideo}
+          unMute={unMute}
+          video={video}
+        />
       </div>
     </>
   );

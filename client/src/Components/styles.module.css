@@ -38,7 +38,6 @@
   position: relative;
   color: red;
   font-size: 25px;
-  cursor: pointer;
   opacity: 0.5;
 }
 .icon {
@@ -88,6 +87,11 @@
 .tag {
   position: relative;
   z-index: 1;
+  max-width: 150px;
+  /* width: 100px !important; */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 /* share screen styles */
 .containerrr {

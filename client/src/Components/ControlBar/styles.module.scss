@@ -1,0 +1,125 @@
+.controlBar {
+  width: 100%;
+  height: 68px;
+  background-color: #13181e00;
+  position: sticky;
+  top: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  .mediaContainer {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100%;
+    width: 20%;
+    gap: 10px;
+    .mediaButton {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      // border: none;
+      font-size: 30px;
+      transition: all 250ms;
+      &:hover {
+        border-radius: 50%;
+        .settingsIcon {
+          color: #01989f;
+        }
+      }
+      .mediaIcon {
+        font-size: 25px;
+        color: white;
+      }
+      .settingsIcon {
+        font-size: 25px;
+        color: #13181e;
+        transition: all 250ms;
+      }
+    }
+  }
+  .featuresContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    .featureButton {
+      width: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 50px;
+      color: white;
+      // border: solid 2px white;
+      background-color: #13181e;
+      border-radius: 10px;
+      gap: 1px;
+      opacity: 0.5;
+      .featureIcon {
+        font-size: 20px;
+      }
+      .featureName {
+        font-size: 13px;
+      }
+      &:disabled {
+        opacity: 0.3;
+      }
+      &:hover:not(:disabled) {
+        opacity: 1;
+        background-color: #282d35;
+      }
+      &.active {
+        opacity: 1;
+        border: none;
+        background: linear-gradient(131deg, #01989f 30%, #ff5f36);
+        background-size: 400% 400%;
+        animation: AnimationName 8s ease infinite;
+        animation-play-state: running;
+      }
+    }
+    .divider {
+      width: 2px;
+      height: 40px;
+      background: white;
+      border-radius: 10px;
+      opacity: 0.4;
+    }
+  }
+  .endContainer {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    height: 100%;
+    width: 20%;
+    // background-color: red;
+    .endButton {
+      margin-inline-end: 30px;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      transition: all 250ms;
+      &:hover {
+        border-radius: 50%;
+      }
+    }
+  }
+}
+
+@keyframes AnimationName {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
