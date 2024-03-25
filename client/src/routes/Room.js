@@ -1,4 +1,4 @@
-import { Button, Modal, Space } from "antd";
+import { Button, Modal, Popover, Space, Typography } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
@@ -13,7 +13,10 @@ import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { isMobileDevice } from "../helpers/isMobileDevice";
 import { getUserAgent } from "../helpers/getUserAgent";
-
+import styles from "./styles.module.scss";
+import { FullScreenButton } from "../Components/FullScreen/FullScreen";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUserCheck } from "@fortawesome/free-solid-svg-icons";
 const Room = () => {
   const socketRef = useRef();
   const userVideo = useRef();
@@ -478,6 +481,21 @@ const Room = () => {
 
     return Send_dataChannel;
   }
+
+  const UsersPresents = ({ peers }) => {
+    return (
+      <>
+        {peers.map((peer) => {
+          return (
+            <div>
+              {peer.userName} - {peer.isAdmin ? "admin" : "user"}
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+
   return (
     <>
       <Modal
@@ -498,15 +516,24 @@ const Room = () => {
         <p>You have to enable video and audio permission to use our app</p>
         {permissionDenied}
       </Modal>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column",
-          padding: 10,
-        }}
-      >
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <Popover
+            trigger={"hover"}
+            placement="bottomRight"
+            content={<UsersPresents peers={peers} />}
+            title="Present Users"
+            arrow={false}
+            style={{ padding: 10 }}
+          >
+            <Space size={5} className={styles.usersPresents}>
+              {peers.length}
+              <FontAwesomeIcon icon={faUserCheck} />
+            </Space>
+          </Popover>
+          <div className={styles.sessionTitle}>York British Academey</div>
+          <FullScreenButton />
+        </div>
         <Space
           style={{
             width: "100%",

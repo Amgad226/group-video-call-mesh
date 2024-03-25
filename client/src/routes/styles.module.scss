@@ -1,0 +1,44 @@
+.container {
+  display: flex;
+  justify-content: start;
+  align-items: center;
+  flex-direction: column;
+  //   padding: 10px;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #13181e;
+  background-image: url("../assets/logo.png");
+  background-blend-mode: overlay;
+  background-size: 70%;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: relative;
+  .header {
+    width: 100%;
+    height: 60px;
+    position: sticky;
+    background-color: #01989f;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .sessionTitle {
+      width: 100%;
+      font-size: 30px;
+      color: white;
+      font-weight: 500;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .usersPresents {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  }
+}
