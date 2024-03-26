@@ -1,10 +1,9 @@
 import { Tag } from "antd";
 import React from "react";
-import img from "../assets/test.png";
-import { getUserAgent } from "../helpers/getUserAgent";
-import SoundVolumeMeter from "./SoundMeter";
-import UserAgentType from "./UserAgentType";
-import styles from "./styles.module.css";
+import img from "../../assets/image1.png";
+import { getUserAgent } from "../../helpers/getUserAgent";
+import UserAgentType from "../UserAgentType";
+import styles from "./styles.module.scss";
 
 function ClientVideo({
   userName,
@@ -20,7 +19,7 @@ function ClientVideo({
         <UserAgentType agentType={getUserAgent()} />
         {isAdmin && (
           <Tag className={styles.tag} color="#f50">
-            Admin
+            Owner
           </Tag>
         )}
         <Tag className={styles.tag} color="blue">
@@ -34,17 +33,18 @@ function ClientVideo({
         ref={userVideo}
         autoPlay
         playsInline
-        style={
-          !screenSharing
-            ? {
-                transform: "scaleX(-1)",
-              }
-            : {}
-        }
+        style={{
+          ...(screenSharing ? { transform: "scaleX(-1)" } : {}),
+          ...(!video && !screenSharing ? { opacity: 0 } : {}),
+        }}
       />
-      {!video && !screenSharing && <img src={img} className={styles.alt} />}
+      {!video && !screenSharing && (
+        <div className={styles.altContainer}>
+          <img src={img} className={styles.altImage} />
+        </div>
+      )}
       <div className={styles.acitons}></div>
-      <SoundVolumeMeter mediaStream={clientStreamRef.current} />
+      {/* <SoundVolumeMeter mediaStream={clientStreamRef.current} /> */}
     </div>
   );
 }

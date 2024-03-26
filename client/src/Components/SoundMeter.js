@@ -87,7 +87,7 @@ const SoundVolumeMeter = ({ mediaStream }) => {
       style={{
         width: "100%",
         height: "7px",
-        background: "black",
+        background: "transparent",
         position: "relative",
         zIndex: "1",
         display: "flex",

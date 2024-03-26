@@ -1,14 +1,15 @@
 .videoFrame {
   position: relative;
   width: 400px;
-  height: 300px;
+  height: 270px;
   overflow: hidden;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-direction: column;
-
-  border-radius: 10px;
+  border-radius: 15px;
+  background-color: #e7eced;
+  border: 5px solid #e7eced;
 }
 .video {
   width: 100%;
@@ -16,7 +17,7 @@
   position: absolute;
   object-fit: contain;
   z-index: 0;
-  background-color: black;
+  background-color: #e7eced;
   /*transform: scaleX(-1); Flip horizontally because the share screen breaks */
 }
 .acitons {
@@ -65,14 +66,6 @@
   position: absolute;
 }
 
-.peerVideo {
-  /* cursor: pointer; */
-  transition: all 250ms;
-}
-.peerVideo:hover {
-  transition: all 250ms;
-  border-radius: 30px;
-}
 .tagContainer {
   position: relative;
   display: flex;

@@ -1,0 +1,56 @@
+.videoFrame {
+  position: relative;
+  width: 400px;
+  height: 270px;
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+  border-radius: 15px;
+  // background-color: #01989f;
+  // border: 5px solid #01989f;
+  background-color: #3b4a5c7a;
+  backdrop-filter: blur(10px);
+  .tagContainer {
+    position: relative;
+    display: flex;
+    justify-content: end;
+    /* flex-direction: row-reverse; */
+    align-items: center;
+    margin: 5px;
+    height: 40px;
+    width: 95%;
+    gap: 10px;
+    .tag {
+      position: relative;
+      z-index: 1;
+      max-width: 150px;
+      /* width: 100px !important; */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+  .video {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    object-fit: cover;
+    z-index: 0;
+    background: transparent;
+  }
+  .altContainer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .altImage {
+      margin-top: 19px;
+      width: 200px;
+    }
+  }
+}

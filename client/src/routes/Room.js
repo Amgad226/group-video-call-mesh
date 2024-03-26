@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import io from "socket.io-client";
-import ClientVideo from "../Components/ClientVideo";
+import ClientVideo from "../Components/ClientVideo/ClientVideo";
 import { Container } from "../Components/Container";
 import ControlBar from "../Components/ControlBar/ControlBar";
 import Header from "../Components/Header/Header";

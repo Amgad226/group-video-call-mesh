@@ -290,7 +290,7 @@ const Video = ({
                 <UserAgentType agentType={peerObj.userAgent} />
                 {peerObj.isAdmin && (
                   <Tag className={styles.tag} color="#f50">
-                    Admin
+                    Owner
                   </Tag>
                 )}
                 <Tag className={styles.tag} color="blue">
