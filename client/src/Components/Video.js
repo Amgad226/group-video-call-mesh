@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { StyledVideo } from "./StyledVideo";
 import { generateRandomColor } from "../helpers/generateBorderColor";
 import styles from "./styles.module.css";
@@ -337,4 +337,4 @@ const Video = ({
   );
 };
 
-export default Video;
+export default memo(Video);

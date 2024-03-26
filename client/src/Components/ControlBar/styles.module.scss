@@ -15,15 +15,20 @@
     width: 20%;
     gap: 10px;
     .mediaButton {
-      width: 50px;
-      height: 50px;
+      width: 45px;
+      height: 45px;
       display: flex;
       justify-content: center;
       align-items: center;
       // border: none;
       font-size: 30px;
       transition: all 250ms;
-      &:hover {
+      &:disabled {
+        opacity: 0.3 !important;
+        background-color: #ff5f36;
+        border: none;
+      }
+      &:hover:not(:disabled) {
         border-radius: 50%;
         .settingsIcon {
           color: #01989f;
@@ -71,6 +76,7 @@
       &:hover:not(:disabled) {
         opacity: 1;
         background-color: #282d35;
+        color: white;
       }
       &.active {
         opacity: 1;
@@ -98,8 +104,8 @@
     // background-color: red;
     .endButton {
       margin-inline-end: 30px;
-      width: 50px;
-      height: 50px;
+      width: 45px;
+      height: 45px;
       display: flex;
       justify-content: center;
       align-items: center;

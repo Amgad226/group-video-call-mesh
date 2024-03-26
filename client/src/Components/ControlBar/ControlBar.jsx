@@ -20,6 +20,7 @@ import { isMobileDevice } from "../../helpers/isMobileDevice";
 import { checkConnectionState } from "../../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../../helpers/createFakeVideoTrack";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
+import DeviceSelectionModal from "../DeviceSelectionModal";
 
 function ControlBar({
   shareScreenMode,
@@ -43,9 +44,18 @@ function ControlBar({
   video,
   screenSharing,
   setScreenSharing,
+  activeVideoDevice,
+  setActiveVideoDevice,
+  activeAudioDevice,
+  setActiveAudioDevice,
 }) {
-  const [initDone, setInitDone] = useState(false);
   const history = useHistory();
+
+  const [initDone, setInitDone] = useState(false);
+
+  const [hasMultipleDevices, setHasMultipleDevices] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
   useEffect(() => {
     if (!unMute && clientStreamRef.current) {
       socketRef.current.emit("toggle-voice", { voice_bool: false });
@@ -239,221 +249,248 @@ function ControlBar({
   };
 
   return (
-    <div className={styles.controlBar}>
-      <div className={styles.mediaContainer}>
-        <Button
-          type="primary"
-          danger={!unMute}
-          style={{ marginInlineStart: 10, opacity: forceMuted ? 0.5 : 1 }}
-          className={styles.mediaButton}
-          disabled={forceMuted}
-          onClick={() => {
-            if (!forceMuted) setUnMute(!unMute);
-          }}
-        >
-          <FontAwesomeIcon
-            className={styles.mediaIcon}
-            icon={unMute ? faMicrophoneLines : faMicrophoneLinesSlash}
-          />
-        </Button>
-        <Button
-          disabled={(forceVideoStoped || videoDeviceNotExist) && !screenSharing}
-          type="primary"
-          className={styles.mediaButton}
-          style={{
-            opacity: forceVideoStoped ? 0.5 : 1,
-          }}
-          onClick={() => {
-            if (!forceVideoStoped) setVideo(!video);
-          }}
-          danger={!video || videoDeviceNotExist}
-        >
-          <FontAwesomeIcon
-            className={styles.mediaIcon}
-            icon={video ? faVideo : faVideoSlash}
-          />
-        </Button>
-        <Button
-          type="default"
-          // danger
-          // shape="round"
-          className={styles.mediaButton}
-        >
-          <FontAwesomeIcon className={styles.settingsIcon} icon={faGears} />
-        </Button>
-      </div>
-      <div className={styles.featuresContainer}>
-        <Space
-          style={{
-            width: "100%",
-            height: "50px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {!isMobileDevice() && (
-            <Button
-              disabled={forceVideoStoped}
-              style={{
-                opacity: forceVideoStoped ? 0.5 : 1,
-              }}
-              type="text"
-              size="large"
-              onClick={() => {
-                if (!forceVideoStoped) setShareScreen();
-              }}
-              className={`${styles.featureButton} ${
-                screenSharing && styles.active
-              }`}
-            >
-              <FontAwesomeIcon
-                className={styles.featureIcon}
-                icon={faDisplay}
-              />
-              <span className={styles.featureName}>Share Screen</span>
-            </Button>
-          )}
-          {!isMobileDevice() && (
-            <Button
-              type="text"
-              size="large"
-              onClick={() => {
-                if (!shareScreenMode.streamId) {
-                  addShareScreenWithNewTrack();
-                } else if (shareScreenMode.streamId && shareScreenMode.owner) {
-                  stopShareScreenWithNewTrack();
-                }
-              }}
-              className={`${styles.featureButton} ${
-                shareScreenMode.streamId && styles.active
-              }`}
-              disabled={shareScreenMode.streamId && !shareScreenMode.owner}
-            >
-              <FontAwesomeIcon
-                className={styles.featureIcon}
-                icon={faDisplay}
-              />
-              <span className={styles.featureName}>Share Screen 2</span>
-            </Button>
-          )}
+    <>
+      <DeviceSelectionModal
+        showModal={showModal}
+        setShowModal={setShowModal}
+        activeVideoDevice={activeVideoDevice}
+        setActiveVideoDevice={setActiveVideoDevice}
+        activeAudioDevice={activeAudioDevice}
+        setActiveAudioDevice={setActiveAudioDevice}
+        clientStreamRef={clientStreamRef}
+        userVideo={userVideo}
+        peers={peers}
+        setHasMultipleDevices={setHasMultipleDevices}
+        forceVideoStoped={forceVideoStoped}
+        forceMuted={forceMuted}
+      />
+      <div className={styles.controlBar}>
+        <div className={styles.mediaContainer}>
           <Button
-            disabled
-            type="text"
-            size="large"
-            className={`${styles.featureButton}`}
-          >
-            <FontAwesomeIcon className={styles.featureIcon} icon={faPalette} />
-            <span className={styles.featureName}>Whiteboard</span>
-          </Button>
-          <Button
-            disabled
-            type="text"
-            size="large"
-            className={`${styles.featureButton}`}
+            type="primary"
+            danger={!unMute}
+            style={{ marginInlineStart: 10, opacity: forceMuted ? 0.5 : 1 }}
+            className={styles.mediaButton}
+            disabled={forceMuted}
+            onClick={() => {
+              if (!forceMuted) setUnMute(!unMute);
+            }}
           >
             <FontAwesomeIcon
-              className={styles.featureIcon}
-              icon={faPenToSquare}
+              className={styles.mediaIcon}
+              icon={unMute ? faMicrophoneLines : faMicrophoneLinesSlash}
             />
-            <span className={styles.featureName}>Assignments</span>
           </Button>
           <Button
-            disabled
-            type="text"
-            size="large"
-            className={`${styles.featureButton}`}
+            disabled={
+              (forceVideoStoped || videoDeviceNotExist) && !screenSharing
+            }
+            type="primary"
+            className={styles.mediaButton}
+            style={{
+              opacity: forceVideoStoped ? 0.5 : 1,
+            }}
+            onClick={() => {
+              if (!forceVideoStoped) setVideo(!video);
+            }}
+            danger={!video || videoDeviceNotExist}
           >
             <FontAwesomeIcon
-              className={styles.featureIcon}
-              icon={faStopwatch}
+              className={styles.mediaIcon}
+              icon={video ? faVideo : faVideoSlash}
             />
-            <span className={styles.featureName}>Break Time</span>
           </Button>
-          {iAdmin && (
-            <>
-              <div className={styles.divider}></div>
+          {hasMultipleDevices && (!forceMuted || !forceVideoStoped) && (
+            <Button
+              onClick={() => setShowModal(true)}
+              type="default"
+              className={styles.mediaButton}
+            >
+              <FontAwesomeIcon className={styles.settingsIcon} icon={faGears} />
+            </Button>
+          )}
+        </div>
+        <div className={styles.featuresContainer}>
+          <Space
+            style={{
+              width: "100%",
+              height: "50px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {!isMobileDevice() && (
               <Button
-                disabled
+                disabled={forceVideoStoped}
                 type="text"
                 size="large"
-                className={`${styles.featureButton}`}
+                onClick={() => {
+                  if (!forceVideoStoped) setShareScreen();
+                }}
+                className={`${styles.featureButton} ${
+                  screenSharing && styles.active
+                }`}
               >
                 <FontAwesomeIcon
                   className={styles.featureIcon}
-                  icon={faTriangleExclamation}
+                  icon={faDisplay}
                 />
-                <span className={styles.featureName}>Reports</span>
+                <span className={styles.featureName}>Share Screen</span>
               </Button>
+            )}
+            {!isMobileDevice() && (
               <Button
                 type="text"
                 size="large"
+                onClick={() => {
+                  if (!shareScreenMode.streamId) {
+                    addShareScreenWithNewTrack();
+                  } else if (
+                    shareScreenMode.streamId &&
+                    shareScreenMode.owner
+                  ) {
+                    stopShareScreenWithNewTrack();
+                  }
+                }}
                 className={`${styles.featureButton} ${
-                  settingsModalOpen && styles.active
+                  shareScreenMode.streamId && styles.active
                 }`}
-                onClick={() => {
-                  setSettingModalOpen(true);
-                }}
+                disabled={shareScreenMode.streamId && !shareScreenMode.owner}
               >
-                <FontAwesomeIcon className={styles.featureIcon} icon={faGear} />
-                <span className={styles.featureName}>Settings</span>
+                <FontAwesomeIcon
+                  className={styles.featureIcon}
+                  icon={faDisplay}
+                />
+                <span className={styles.featureName}>Share Screen 2</span>
               </Button>
-            </>
-          )}
-        </Space>
+            )}
+            <Button
+              disabled
+              type="text"
+              size="large"
+              className={`${styles.featureButton}`}
+            >
+              <FontAwesomeIcon
+                className={styles.featureIcon}
+                icon={faPalette}
+              />
+              <span className={styles.featureName}>Whiteboard</span>
+            </Button>
+            <Button
+              disabled
+              type="text"
+              size="large"
+              className={`${styles.featureButton}`}
+            >
+              <FontAwesomeIcon
+                className={styles.featureIcon}
+                icon={faPenToSquare}
+              />
+              <span className={styles.featureName}>Assignments</span>
+            </Button>
+            <Button
+              disabled
+              type="text"
+              size="large"
+              className={`${styles.featureButton}`}
+            >
+              <FontAwesomeIcon
+                className={styles.featureIcon}
+                icon={faStopwatch}
+              />
+              <span className={styles.featureName}>Break Time</span>
+            </Button>
+            {iAdmin && (
+              <>
+                <div className={styles.divider}></div>
+                <Button
+                  disabled
+                  type="text"
+                  size="large"
+                  className={`${styles.featureButton}`}
+                >
+                  <FontAwesomeIcon
+                    className={styles.featureIcon}
+                    icon={faTriangleExclamation}
+                  />
+                  <span className={styles.featureName}>Reports</span>
+                </Button>
+                <Button
+                  type="text"
+                  size="large"
+                  className={`${styles.featureButton} ${
+                    settingsModalOpen && styles.active
+                  }`}
+                  onClick={() => {
+                    setSettingModalOpen(true);
+                  }}
+                >
+                  <FontAwesomeIcon
+                    className={styles.featureIcon}
+                    icon={faGear}
+                  />
+                  <span className={styles.featureName}>Settings</span>
+                </Button>
+              </>
+            )}
+          </Space>
+        </div>
+        <div className={styles.endContainer}>
+          <Popover
+            trigger={"click"}
+            placement="topLeft"
+            content={
+              <Space direction="vertical">
+                <Button
+                  block
+                  danger
+                  type="primary"
+                  onClick={() => {
+                    history.push("/");
+                    clientStreamRef.current?.getTracks()?.forEach((track) => {
+                      console.log(track);
+                      track.stop();
+                    });
+                  }}
+                >
+                  Leave Session
+                </Button>
+                {iAdmin && (
+                  <>
+                    <Button
+                      block
+                      type="primary"
+                      // size="large"
+                      danger
+                      onClick={() => {
+                        socketRef.current.emit("end-call");
+                        clientStreamRef.current
+                          ?.getTracks()
+                          ?.forEach((track) => {
+                            console.log(track);
+                            track.stop();
+                          });
+                      }}
+                    >
+                      End Session
+                    </Button>
+                  </>
+                )}
+              </Space>
+            }
+          >
+            <Button
+              className={`${styles.endButton}`}
+              size="large"
+              danger
+              type="primary"
+              icon={<FontAwesomeIcon icon={faX} />}
+            ></Button>
+          </Popover>
+        </div>
       </div>
-      <div className={styles.endContainer}>
-        <Popover
-          trigger={"click"}
-          placement="topLeft"
-          content={
-            <Space direction="vertical">
-              <Button
-                block
-                danger
-                type="primary"
-                onClick={() => {
-                  history.push("/");
-                  clientStreamRef.current?.getTracks()?.forEach((track) => {
-                    console.log(track);
-                    track.stop();
-                  });
-                }}
-              >
-                Leave Session
-              </Button>
-              {iAdmin && (
-                <>
-                  <Button
-                    block
-                    type="primary"
-                    // size="large"
-                    danger
-                    onClick={() => {
-                      socketRef.current.emit("end-call");
-                      clientStreamRef.current?.getTracks()?.forEach((track) => {
-                        console.log(track);
-                        track.stop();
-                      });
-                    }}
-                  >
-                    End Session
-                  </Button>
-                </>
-              )}
-            </Space>
-          }
-        >
-          <Button
-            className={`${styles.endButton}`}
-            size="large"
-            danger
-            type="primary"
-            icon={<FontAwesomeIcon icon={faX} />}
-          ></Button>
-        </Popover>
-      </div>
-    </div>
+    </>
   );
 }
 

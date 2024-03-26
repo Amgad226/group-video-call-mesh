@@ -563,6 +563,10 @@ const Room = () => {
           setVideo={setVideo}
           unMute={unMute}
           video={video}
+          activeAudioDevice={activeAudioDevice}
+          activeVideoDevice={activeVideoDevice}
+          setActiveAudioDevice={setActiveAudioDevice}
+          setActiveVideoDevice={setActiveVideoDevice}
         />
       </div>
     </>
