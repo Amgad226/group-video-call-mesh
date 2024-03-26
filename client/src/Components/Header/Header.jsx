@@ -5,7 +5,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserCheck } from "@fortawesome/free-solid-svg-icons";
 import { FullScreenButton } from "../FullScreen/FullScreen";
 import Timer from "../Timer/Timer";
+import { useWindowSize } from "../../hooks/useWindowSize";
+import img from "../../assets/logo.png";
 function Header({ peers }) {
+  const { width } = useWindowSize();
   const UsersPresents = ({ peers }) => {
     return (
       <>
@@ -37,10 +40,15 @@ function Header({ peers }) {
           </Popover>
         </div>
       </div>
+      {width > 776 ? (
+        <div className={styles.sessionTitle}>York British Academey</div>
+      ) : (
+        <img src={img} width={70} />
+      )}
 
-      <div className={styles.sessionTitle}>York British Academey</div>
       <div className={styles.actionsContainer}>
-        <Timer startDate={ new Date(Date.now())} />
+        {width > 776 && <Timer startDate={new Date(Date.now())} />}
+
         <FullScreenButton />
       </div>
     </div>

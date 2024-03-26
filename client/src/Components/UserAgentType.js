@@ -20,69 +20,101 @@ import {
   faSafari,
 } from "@fortawesome/free-brands-svg-icons";
 
-function UserAgentType({agentType}) {
+function UserAgentType({ agentType }) {
   switch (agentType) {
     case ChromeName:
       return (
         <FontAwesomeIcon
-          size="xl"
-          style={{ color: "whitesmoke", position: "relative", zIndex: 1 }}
+          style={{
+            color: "whitesmoke",
+            position: "relative",
+            zIndex: 1,
+            fontSize: 30,
+          }}
           icon={faChrome}
         />
       );
     case FirefoxName:
       return (
         <FontAwesomeIcon
-          size="xl"
-          style={{ color: "whitesmoke", position: "relative", zIndex: 1 }}
+          style={{
+            color: "whitesmoke",
+            position: "relative",
+            zIndex: 1,
+            fontSize: 30,
+          }}
           icon={faFirefoxBrowser}
         />
       );
     case SafariName:
       return (
         <FontAwesomeIcon
-          size="xl"
-          style={{ color: "whitesmoke", position: "relative", zIndex: 1 }}
+          style={{
+            color: "whitesmoke",
+            position: "relative",
+            zIndex: 1,
+            fontSize: 30,
+          }}
           icon={faSafari}
         />
       );
     case EdgeName:
       return (
         <FontAwesomeIcon
-          size="xl"
-          style={{ color: "whitesmoke", position: "relative", zIndex: 1 }}
+          style={{
+            color: "whitesmoke",
+            position: "relative",
+            zIndex: 1,
+            fontSize: 30,
+          }}
           icon={faEdge}
         />
       );
     case OpraName:
       return (
         <FontAwesomeIcon
-          size="xl"
-          style={{ color: "whitesmoke", position: "relative", zIndex: 1 }}
+          style={{
+            color: "whitesmoke",
+            position: "relative",
+            zIndex: 1,
+            fontSize: 30,
+          }}
           icon={faOpera}
         />
       );
     case InternentExName:
       return (
         <FontAwesomeIcon
-          size="xl"
-          style={{ color: "whitesmoke", position: "relative", zIndex: 1 }}
+          style={{
+            color: "whitesmoke",
+            position: "relative",
+            zIndex: 1,
+            fontSize: 30,
+          }}
           icon={faInternetExplorer}
         />
       );
     case MoblieName:
       return (
         <FontAwesomeIcon
-          size="xl"
-          style={{ color: "whitesmoke", position: "relative", zIndex: 1 }}
+          style={{
+            color: "whitesmoke",
+            position: "relative",
+            zIndex: 1,
+            fontSize: 30,
+          }}
           icon={faMobile}
         />
       );
     default:
       return (
         <FontAwesomeIcon
-          size="xl"
-          style={{ color: "whitesmoke", position: "relative", zIndex: 1 }}
+          style={{
+            color: "whitesmoke",
+            position: "relative",
+            zIndex: 1,
+            fontSize: 30,
+          }}
           icon={faCircleQuestion}
         />
       );

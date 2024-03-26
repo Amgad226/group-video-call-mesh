@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import io from "socket.io-client";
 import ClientVideo from "../Components/ClientVideo/ClientVideo";
-import { Container } from "../Components/Container";
 import ControlBar from "../Components/ControlBar/ControlBar";
 import Header from "../Components/Header/Header";
 import PermissionsModal from "../Components/PermissionsModal/PermissionsModal";
@@ -499,7 +498,7 @@ const Room = () => {
             />
           </>
         )}
-        <Container>
+        <div className={styles.framesContainer}>
           <ClientVideo
             userName={userName}
             userVideo={userVideo}
@@ -539,7 +538,7 @@ const Room = () => {
               />
             );
           })}
-        </Container>
+        </div>
         <ControlBar
           addShareScreenWithNewTrack={addShareScreenWithNewTrack}
           clientStreamRef={clientStreamRef}

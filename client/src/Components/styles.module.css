@@ -8,17 +8,16 @@
   align-items: center;
   flex-direction: column;
   border-radius: 15px;
-  background-color: #e7eced;
-  border: 5px solid #e7eced;
+  background-color: #3b4a5c7a;
+  backdrop-filter: blur(10px);
 }
 .video {
   width: 100%;
   height: 100%;
   position: absolute;
-  object-fit: contain;
+  object-fit: cover;
   z-index: 0;
-  background-color: #e7eced;
-  /*transform: scaleX(-1); Flip horizontally because the share screen breaks */
+  background: transparent;
 }
 .acitons {
   width: 100%;
@@ -35,12 +34,7 @@
 .button {
   margin-bottom: 10px;
 }
-.remoteIcon {
-  position: relative;
-  color: red;
-  font-size: 25px;
-  opacity: 0.5;
-}
+
 .icon {
   position: relative;
   color: white;
@@ -59,18 +53,23 @@
   opacity: 1;
   color: seagreen;
 }
-.alt {
+.altContainer {
   width: 100%;
   height: 100%;
-  object-fit: cover;
   position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-
+.altImage {
+  margin-top: 19px;
+  width: 200px;
+}
 .tagContainer {
   position: relative;
   display: flex;
-  justify-content: end;
-  /* flex-direction: row-reverse; */
+  justify-content: space-between;
+  flex-direction: row-reverse;
   align-items: center;
   margin: 5px;
   height: 40px;

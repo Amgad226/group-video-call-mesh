@@ -8,7 +8,8 @@ import { Button, Popover, Space, Tag } from "antd";
 import React, { memo, useEffect, useRef, useState } from "react";
 import SoundVolumeMeter from "./SoundMeter";
 import UserAgentType from "./UserAgentType";
-import styles from "./styles.module.css";
+import styles from "./ClientVideo/styles.module.scss";
+import img from "../assets/image.png";
 
 const Video = ({
   dataChannelsRef,
@@ -269,9 +270,13 @@ const Video = ({
           <>
             <div
               key={index}
-              style={{ flexDirection: "column-reverse" }}
               className={`${styles.peerVideo} ${styles.videoFrame}`}
             >
+              {!peerVideoState && (
+                <div className={styles.altContainer}>
+                  <img src={img} className={styles.altImage} />
+                </div>
+              )}
               <video
                 playsInline
                 autoPlay
@@ -282,49 +287,57 @@ const Video = ({
                   }
                 }}
                 className={styles.video}
+                style={{
+                  ...(!peerVideoState ? { opacity: 0 } : {}),
+                }}
               />
-              {forSoundTrackStream[index] && (
-                <SoundVolumeMeter mediaStream={forSoundTrackStream[index]} />
-              )}
               <div className={styles.tagContainer}>
-                <UserAgentType agentType={peerObj.userAgent} />
+                <Space>
+                  <UserAgentType agentType={peerObj.userAgent} />
+                  <Popover
+                    placement="bottomRight"
+                    content={Actions(videoTagRefs.current[index])}
+                    trigger="click"
+                  >
+                    <Button
+                      type="default"
+                      shape="circle"
+                      icon={
+                        <FontAwesomeIcon
+                          icon={faEllipsisVertical}
+                          className={styles.options}
+                        />
+                      }
+                    />
+                  </Popover>
+                </Space>
                 {peerObj.isAdmin && (
-                  <Tag className={styles.tag} color="#f50">
+                  <Tag className={styles.tag} color="#13181e">
                     Owner
                   </Tag>
                 )}
-                <Tag className={styles.tag} color="blue">
-                  {peerObj.userName}
-                </Tag>
-                {!peerVoiceState && (
-                  <FontAwesomeIcon
-                    className={styles.remoteIcon}
-                    icon={faMicrophoneSlash}
-                  />
-                )}
-                {!peerVideoState && (
-                  <FontAwesomeIcon
-                    className={styles.remoteIcon}
-                    icon={faVideoSlash}
-                  />
-                )}
-                <Popover
-                  placement="bottomRight"
-                  content={Actions(videoTagRefs.current[index])}
-                  trigger="click"
-                >
-                  <Button
-                    type="primary"
-                    shape="circle"
-                    size="large"
-                    icon={
-                      <FontAwesomeIcon
-                        icon={faEllipsisVertical}
-                        className={styles.options}
-                      />
-                    }
-                  />
-                </Popover>
+              </div>
+              {forSoundTrackStream[index] && (
+                <div className={styles.soundMeterContainer}>
+                  <SoundVolumeMeter mediaStream={forSoundTrackStream[index]} />
+                </div>
+              )}
+              <div className={styles.mediaContainer}>
+                <div className={styles.userName}>{peerObj.userName}</div>
+                <Space>
+                  {!peerVoiceState && (
+                    <FontAwesomeIcon
+                      className={styles.remoteIcon}
+                      icon={faMicrophoneSlash}
+                    />
+                  )}
+                  {!peerVideoState && (
+                    <FontAwesomeIcon
+                      className={styles.remoteIcon}
+                      icon={faVideoSlash}
+                    />
+                  )}
+                </Space>
               </div>
             </div>
           </>

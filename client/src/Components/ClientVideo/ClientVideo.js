@@ -3,6 +3,8 @@ import React from "react";
 import img from "../../assets/image1.png";
 import styles from "./styles.module.scss";
 import SoundVolumeMeter from "../SoundMeter";
+import UserAgentType from "../UserAgentType";
+import { getUserAgent } from "../../helpers/getUserAgent";
 function ClientVideo({
   userName,
   userVideo,
@@ -14,7 +16,7 @@ function ClientVideo({
   return (
     <div className={styles.videoFrame}>
       <div className={styles.tagContainer}>
-        {/* <UserAgentType agentType={getUserAgent()} /> */}
+        <UserAgentType agentType={getUserAgent()} />
         {isAdmin && (
           <Tag className={styles.tag} color="#13181e">
             Owner
@@ -35,7 +37,9 @@ function ClientVideo({
         autoPlay
         playsInline
         style={{
-          ...(screenSharing ? { transform: "scaleX(-1)" } : {}),
+          ...(screenSharing
+            ? { transform: "scaleX(1)" }
+            : { transform: "scaleX(-1)" }),
           ...(!video && !screenSharing ? { opacity: 0 } : {}),
         }}
       />

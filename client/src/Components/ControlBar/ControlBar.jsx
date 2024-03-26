@@ -1,4 +1,5 @@
 import {
+  faBars,
   faDisplay,
   faGear,
   faGears,
@@ -13,7 +14,7 @@ import {
   faX,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, Popover, Space } from "antd";
+import { Button, Col, Menu, Popover, Row, Space } from "antd";
 import React, { useEffect, useState } from "react";
 import styles from "./styles.module.scss";
 import { isMobileDevice } from "../../helpers/isMobileDevice";
@@ -21,7 +22,7 @@ import { checkConnectionState } from "../../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../../helpers/createFakeVideoTrack";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import DeviceSelectionModal from "../DeviceSelectionModal/DeviceSelectionModal";
-
+import { useWindowSize } from "../../hooks/useWindowSize";
 function ControlBar({
   shareScreenMode,
   addShareScreenWithNewTrack,
@@ -49,6 +50,7 @@ function ControlBar({
   activeAudioDevice,
   setActiveAudioDevice,
 }) {
+  const { width } = useWindowSize();
   const history = useHistory();
 
   const [initDone, setInitDone] = useState(false);
@@ -264,8 +266,15 @@ function ControlBar({
         forceVideoStoped={forceVideoStoped}
         forceMuted={forceMuted}
       />
-      <div className={styles.controlBar}>
-        <div className={styles.mediaContainer}>
+      <Row justify={"space-between"} className={styles.controlBar}>
+        <Col
+          xs={12}
+          sm={8}
+          md={6}
+          lg={5}
+          xl={4}
+          className={styles.mediaContainer}
+        >
           <Button
             type="primary"
             danger={!unMute}
@@ -309,134 +318,157 @@ function ControlBar({
               <FontAwesomeIcon className={styles.settingsIcon} icon={faGears} />
             </Button>
           )}
-        </div>
-        <div className={styles.featuresContainer}>
-          <Space
-            style={{
-              width: "100%",
-              height: "50px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
+        </Col>
+        <Col
+          xs={4}
+          sm={12}
+          md={14}
+          lg={17}
+          xl={16}
+          className={styles.featuresContainer}
+        >
+          <Menu
+            triggerSubMenuAction="click"
+            className={styles.featuresMenu}
+            mode="horizontal"
+            theme="light"
+            // selectedKeys={["1"]}
+            selectable={false}
           >
-            {!isMobileDevice() && (
+            {true && (
+              <Menu.Item key={"1"} className={styles.menuItem}>
+                <Button
+                  disabled={forceVideoStoped}
+                  type="text"
+                  size="large"
+                  onClick={() => {
+                    if (!forceVideoStoped) setShareScreen();
+                  }}
+                  className={`${styles.featureButton} ${
+                    screenSharing && styles.active
+                  }`}
+                >
+                  <FontAwesomeIcon
+                    className={styles.featureIcon}
+                    icon={faDisplay}
+                  />
+                  <span className={styles.featureName}>Share Screen</span>
+                </Button>
+              </Menu.Item>
+            )}
+            {true && (
+              <Menu.Item className={styles.menuItem} key={"2"}>
+                <Button
+                  block
+                  type="text"
+                  size="large"
+                  onClick={() => {
+                    if (!shareScreenMode.streamId) {
+                      addShareScreenWithNewTrack();
+                    } else if (
+                      shareScreenMode.streamId &&
+                      shareScreenMode.owner
+                    ) {
+                      stopShareScreenWithNewTrack();
+                    }
+                  }}
+                  className={`${styles.featureButton} ${
+                    shareScreenMode.streamId && styles.active
+                  }`}
+                  disabled={shareScreenMode.streamId && !shareScreenMode.owner}
+                >
+                  <FontAwesomeIcon
+                    className={styles.featureIcon}
+                    icon={faDisplay}
+                  />
+                  <span className={styles.featureName}>Share Screen 2</span>
+                </Button>
+              </Menu.Item>
+            )}
+            <Menu.Item className={styles.menuItem} disabled key={"3"}>
               <Button
-                disabled={forceVideoStoped}
+                disabled
                 type="text"
                 size="large"
-                onClick={() => {
-                  if (!forceVideoStoped) setShareScreen();
-                }}
-                className={`${styles.featureButton} ${
-                  screenSharing && styles.active
-                }`}
+                className={`${styles.featureButton}`}
               >
                 <FontAwesomeIcon
                   className={styles.featureIcon}
-                  icon={faDisplay}
+                  icon={faPalette}
                 />
-                <span className={styles.featureName}>Share Screen</span>
+                <span className={styles.featureName}>Whiteboard</span>
               </Button>
-            )}
-            {!isMobileDevice() && (
+            </Menu.Item>
+            <Menu.Item className={styles.menuItem} disabled key={"4"}>
               <Button
+                disabled
                 type="text"
                 size="large"
-                onClick={() => {
-                  if (!shareScreenMode.streamId) {
-                    addShareScreenWithNewTrack();
-                  } else if (
-                    shareScreenMode.streamId &&
-                    shareScreenMode.owner
-                  ) {
-                    stopShareScreenWithNewTrack();
-                  }
-                }}
-                className={`${styles.featureButton} ${
-                  shareScreenMode.streamId && styles.active
-                }`}
-                disabled={shareScreenMode.streamId && !shareScreenMode.owner}
+                className={`${styles.featureButton}`}
               >
                 <FontAwesomeIcon
                   className={styles.featureIcon}
-                  icon={faDisplay}
+                  icon={faPenToSquare}
                 />
-                <span className={styles.featureName}>Share Screen 2</span>
+                <span className={styles.featureName}>Assignments</span>
               </Button>
-            )}
-            <Button
-              disabled
-              type="text"
-              size="large"
-              className={`${styles.featureButton}`}
-            >
-              <FontAwesomeIcon
-                className={styles.featureIcon}
-                icon={faPalette}
-              />
-              <span className={styles.featureName}>Whiteboard</span>
-            </Button>
-            <Button
-              disabled
-              type="text"
-              size="large"
-              className={`${styles.featureButton}`}
-            >
-              <FontAwesomeIcon
-                className={styles.featureIcon}
-                icon={faPenToSquare}
-              />
-              <span className={styles.featureName}>Assignments</span>
-            </Button>
-            <Button
-              disabled
-              type="text"
-              size="large"
-              className={`${styles.featureButton}`}
-            >
-              <FontAwesomeIcon
-                className={styles.featureIcon}
-                icon={faStopwatch}
-              />
-              <span className={styles.featureName}>Break Time</span>
-            </Button>
+            </Menu.Item>
+            <Menu.Item className={styles.menuItem} disabled key={"5"}>
+              <Button
+                disabled
+                type="text"
+                size="large"
+                className={`${styles.featureButton}`}
+              >
+                <FontAwesomeIcon
+                  className={styles.featureIcon}
+                  icon={faStopwatch}
+                />
+                <span className={styles.featureName}>Break Time</span>
+              </Button>
+            </Menu.Item>
             {iAdmin && (
               <>
-                <div className={styles.divider}></div>
-                <Button
-                  disabled
-                  type="text"
-                  size="large"
-                  className={`${styles.featureButton}`}
-                >
-                  <FontAwesomeIcon
-                    className={styles.featureIcon}
-                    icon={faTriangleExclamation}
-                  />
-                  <span className={styles.featureName}>Reports</span>
-                </Button>
-                <Button
-                  type="text"
-                  size="large"
-                  className={`${styles.featureButton} ${
-                    settingsModalOpen && styles.active
-                  }`}
-                  onClick={() => {
-                    setSettingModalOpen(true);
-                  }}
-                >
-                  <FontAwesomeIcon
-                    className={styles.featureIcon}
-                    icon={faGear}
-                  />
-                  <span className={styles.featureName}>Settings</span>
-                </Button>
+                <Menu.Item disabled key={"6"}>
+                  <Space size={20} className={styles.fuckenMenuItem}>
+                    {width > 1350 && <div className={styles.divider} />}
+                    <Button
+                      disabled
+                      type="text"
+                      size="large"
+                      className={`${styles.featureButton}`}
+                    >
+                      <FontAwesomeIcon
+                        className={styles.featureIcon}
+                        icon={faTriangleExclamation}
+                      />
+                      <span className={styles.featureName}>Reports</span>
+                    </Button>
+                  </Space>
+                </Menu.Item>
+                <Menu.Item className={styles.menuItem} key={"7"}>
+                  <Button
+                    type="text"
+                    size="large"
+                    className={`${styles.featureButton} ${
+                      settingsModalOpen && styles.active
+                    }`}
+                    onClick={() => {
+                      setSettingModalOpen(true);
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      className={styles.featureIcon}
+                      icon={faGear}
+                    />
+                    <span className={styles.featureName}>Settings</span>
+                  </Button>
+                </Menu.Item>
               </>
             )}
-          </Space>
-        </div>
-        <div className={styles.endContainer}>
+          </Menu>
+        </Col>
+        <Col xs={6} sm={4} md={4} lg={2} xl={4} className={styles.endContainer}>
           <Popover
             trigger={"click"}
             placement="topLeft"
@@ -488,8 +520,8 @@ function ControlBar({
               icon={<FontAwesomeIcon icon={faX} />}
             ></Button>
           </Popover>
-        </div>
-      </div>
+        </Col>
+      </Row>
     </>
   );
 }
