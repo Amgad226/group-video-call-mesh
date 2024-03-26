@@ -2,7 +2,7 @@ import React from "react";
 import styles from "./styles.module.css";
 function ShareScreen({ streamRef }) {
   return (
-    <div className={styles.containerrr}>
+    <div className={styles.shareScreenContainer}>
       <video
         controls
         ref={(videoRef) => {
@@ -12,7 +12,6 @@ function ShareScreen({ streamRef }) {
         }}
         playsInline
         autoPlay
-        style={{ width: "100%", height: 500 }}
         className={styles.videoShare}
       />
     </div>

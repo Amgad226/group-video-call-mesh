@@ -86,10 +86,12 @@
   white-space: nowrap;
 }
 /* share screen styles */
-.containerrr {
+.shareScreenContainer {
   border: 3px black solid;
   overflow: hidden;
   border-radius: 10px;
+  width: fit-content;
+  margin: auto;
 }
 .videoShare {
   width: 100%;

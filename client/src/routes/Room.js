@@ -15,6 +15,7 @@ import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { getUserAgent } from "../helpers/getUserAgent";
 import styles from "./styles.module.scss";
+import { Col, Row } from "antd";
 
 const Room = () => {
   const socketRef = useRef();
@@ -487,58 +488,67 @@ const Room = () => {
       <PermissionsModal permissionDenied={permissionDenied} />
       <div className={styles.container}>
         <Header peers={peers} />
-        {shareScreenMode.streamId && (
-          <>
-            <ShareScreen
-              streamRef={
-                newTrackForRemoteShareScreenRef.current
-                  ? newTrackForRemoteShareScreenRef
-                  : newTrackForLocalShareScreenRef
-              }
-            />
-          </>
-        )}
-        <div className={styles.framesContainer}>
-          <ClientVideo
-            userName={userName}
-            userVideo={userVideo}
-            peers={peers}
-            clientStreamRef={clientStreamRef}
-            isAdmin={iAdmin}
-            activeAudioDevice={activeAudioDevice}
-            activeVideoDevice={activeVideoDevice}
-            setActiveVideoDevice={setActiveVideoDevice}
-            setActiveAudioDevice={setActiveAudioDevice}
-            screenSharing={screenSharing}
-            video={video}
-          />
-          {peers.map((peer, index) => {
-            return (
-              <Video
-                dataChannelsRef={dataChannelsRef}
-                newTrackForRemoteShareScreenRef={
-                  newTrackForRemoteShareScreenRef
-                }
-                shareScreenStreamId={shareScreenMode.streamId}
-                setShareScreenMode={setShareScreenMode}
-                id={peersRef.current[index].peerID}
-                key={peersRef.current[index].peerID}
-                peerObj={peer}
-                iAdmin={iAdmin}
-                socket={socketRef.current}
-                setRemoveStreamObj={setRemoveStreamObj}
-                removedStreamID={
-                  removedStreamObj
-                    ? peersRef.current[index].peerID ==
-                      removedStreamObj.callerID
-                      ? removedStreamObj.streamID
-                      : false
-                    : false
+
+        <Row
+          justify={"center"}
+          align={"middle"}
+          className={styles.framesContainer}
+        >
+          {shareScreenMode.streamId && (
+            <Col xs={24}>
+              <ShareScreen
+                streamRef={
+                  newTrackForRemoteShareScreenRef.current
+                    ? newTrackForRemoteShareScreenRef
+                    : newTrackForLocalShareScreenRef
                 }
               />
+            </Col>
+          )}
+          <Col>
+            <ClientVideo
+              userName={userName}
+              userVideo={userVideo}
+              peers={peers}
+              clientStreamRef={clientStreamRef}
+              isAdmin={iAdmin}
+              activeAudioDevice={activeAudioDevice}
+              activeVideoDevice={activeVideoDevice}
+              setActiveVideoDevice={setActiveVideoDevice}
+              setActiveAudioDevice={setActiveAudioDevice}
+              screenSharing={screenSharing}
+              video={video}
+            />
+          </Col>
+          {peers.map((peer, index) => {
+            return (
+              <Col>
+                <Video
+                  dataChannelsRef={dataChannelsRef}
+                  newTrackForRemoteShareScreenRef={
+                    newTrackForRemoteShareScreenRef
+                  }
+                  shareScreenStreamId={shareScreenMode.streamId}
+                  setShareScreenMode={setShareScreenMode}
+                  id={peersRef.current[index].peerID}
+                  key={peersRef.current[index].peerID}
+                  peerObj={peer}
+                  iAdmin={iAdmin}
+                  socket={socketRef.current}
+                  setRemoveStreamObj={setRemoveStreamObj}
+                  removedStreamID={
+                    removedStreamObj
+                      ? peersRef.current[index].peerID ==
+                        removedStreamObj.callerID
+                        ? removedStreamObj.streamID
+                        : false
+                      : false
+                  }
+                />
+              </Col>
             );
           })}
-        </div>
+        </Row>
         <ControlBar
           addShareScreenWithNewTrack={addShareScreenWithNewTrack}
           clientStreamRef={clientStreamRef}
