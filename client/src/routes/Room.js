@@ -490,6 +490,7 @@ const Room = () => {
         <Header peers={peers} />
 
         <Row
+          gutter={[15, 0]}
           justify={"center"}
           align={"middle"}
           className={styles.framesContainer}
@@ -505,7 +506,7 @@ const Room = () => {
               />
             </Col>
           )}
-          <Col>
+          <Col xs={24} md={12} lg={12} xl={8} xxl={6}>
             <ClientVideo
               userName={userName}
               userVideo={userVideo}
@@ -522,7 +523,7 @@ const Room = () => {
           </Col>
           {peers.map((peer, index) => {
             return (
-              <Col>
+              <Col xs={24} md={12} lg={12} xl={8} xxl={6}>
                 <Video
                   dataChannelsRef={dataChannelsRef}
                   newTrackForRemoteShareScreenRef={

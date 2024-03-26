@@ -1,6 +1,7 @@
 .videoFrame {
   position: relative;
   min-width: 300px;
+  width: 100%;
   max-width: 400px;
   height: 270px;
   overflow: hidden;
@@ -13,6 +14,9 @@
   // border: 5px solid #01989f;
   background-color: #3b4a5c7a;
   backdrop-filter: blur(5px);
+  margin: auto;
+  margin-bottom: 15px;
+
   .tagContainer {
     position: relative;
     display: flex;
