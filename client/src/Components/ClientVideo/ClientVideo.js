@@ -1,10 +1,8 @@
 import { Tag } from "antd";
 import React from "react";
 import img from "../../assets/image1.png";
-import { getUserAgent } from "../../helpers/getUserAgent";
-import UserAgentType from "../UserAgentType";
 import styles from "./styles.module.scss";
-
+import SoundVolumeMeter from "../SoundMeter";
 function ClientVideo({
   userName,
   userVideo,
@@ -16,15 +14,18 @@ function ClientVideo({
   return (
     <div className={styles.videoFrame}>
       <div className={styles.tagContainer}>
-        <UserAgentType agentType={getUserAgent()} />
+        {/* <UserAgentType agentType={getUserAgent()} /> */}
         {isAdmin && (
-          <Tag className={styles.tag} color="#f50">
+          <Tag className={styles.tag} color="#13181e">
             Owner
           </Tag>
         )}
-        <Tag className={styles.tag} color="blue">
-          {userName}
-        </Tag>
+      </div>
+      <div className={styles.soundMeterContainer}>
+        <SoundVolumeMeter mediaStream={clientStreamRef.current} />
+      </div>
+      <div className={styles.mediaContainer}>
+        <div className={styles.userName}>{userName}</div>
       </div>
       <video
         className={styles.video}
@@ -43,8 +44,6 @@ function ClientVideo({
           <img src={img} className={styles.altImage} />
         </div>
       )}
-      <div className={styles.acitons}></div>
-      {/* <SoundVolumeMeter mediaStream={clientStreamRef.current} /> */}
     </div>
   );
 }

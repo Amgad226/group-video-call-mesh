@@ -85,21 +85,23 @@ const SoundVolumeMeter = ({ mediaStream }) => {
   return (
     <div
       style={{
-        width: "100%",
-        height: "7px",
+        width: "5px",
+        height: "100%",
         background: "transparent",
         position: "relative",
         zIndex: "1",
         display: "flex",
         justifyContent: "center",
+        alignItems: "center",
         overflow: "hidden",
       }}
     >
       <div
         style={{
           borderRadius: 5,
-          width: `${volumeLevel * 300}%`,
-          height: "7px",
+          maxHeight: "100%",
+          height: `${volumeLevel * 300}%`,
+          width: "7px",
           background: `rgb(${volumeLevel * 10 * 255},${
             255 / (volumeLevel * 10)
           },0)`,

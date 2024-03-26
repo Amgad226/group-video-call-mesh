@@ -15,7 +15,7 @@
   .tagContainer {
     position: relative;
     display: flex;
-    justify-content: end;
+    justify-content: space-between;
     /* flex-direction: row-reverse; */
     align-items: center;
     margin: 5px;
@@ -31,6 +31,35 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+  }
+  .mediaContainer {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    /* flex-direction: row-reverse; */
+    align-items: center;
+    margin: 5px;
+    height: 40px;
+    width: 95%;
+    margin-top: auto;
+    gap: 10px;
+    z-index: 1;
+    .userName {
+      color: whitesmoke;
+      padding: 5px 15px;
+      background-color: #3b4a5c7a;
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      text-transform: capitalize;
+    }
+  }
+  .soundMeterContainer {
+    position: relative;
+    z-index: 1;
+    width: 95%;
+    height: 75%;
+    display: flex;
+    justify-content: end;
   }
   .video {
     width: 100%;
