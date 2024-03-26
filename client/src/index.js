@@ -11,16 +11,16 @@ import { ConfigProvider } from "antd";
 // window.Buffer = [];
 ReactDOM.render(
   <React.StrictMode>
-    <ConfigProvider
+    {/* <ConfigProvider
       theme={{
         token: {
           colorPrimary: "#01989F",
           colorError: "#CC4C4C",
         },
       }}
-    >
+    > */}
       <App />
-    </ConfigProvider>
+    {/* </ConfigProvider> */}
   </React.StrictMode>,
   document.getElementById("root")
 );

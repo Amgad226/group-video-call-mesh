@@ -20,7 +20,7 @@ import { isMobileDevice } from "../../helpers/isMobileDevice";
 import { checkConnectionState } from "../../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../../helpers/createFakeVideoTrack";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import DeviceSelectionModal from "../DeviceSelectionModal";
+import DeviceSelectionModal from "../DeviceSelectionModal/DeviceSelectionModal";
 
 function ControlBar({
   shareScreenMode,

@@ -1,5 +1,13 @@
-import { Button, Modal, Space } from "antd";
-import React from "react";
+import { Button, Modal, Space, Switch } from "antd";
+import React, { useState } from "react";
+import styles from "./styles.module.scss";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faMicrophoneLines,
+  faMicrophoneLinesSlash,
+  faVideo,
+  faVideoSlash,
+} from "@fortawesome/free-solid-svg-icons";
 
 function SettingsModal({
   iAdmin,
@@ -11,8 +19,11 @@ function SettingsModal({
   adminStopCamAll,
   setAdminStopCamAll,
 }) {
+  const [loading, setLoading] = useState(false);
   return (
     <Modal
+      width={400}
+      destroyOnClose
       centered
       onOk={() => {
         setSettingModalOpen(false);
@@ -27,59 +38,61 @@ function SettingsModal({
       title="Settings"
       open={settingsModalOpen}
     >
-      <Space direction="vertical">
+      <Space direction="vertical" style={{ width: "100%" }}>
         {iAdmin && (
           <>
-            {adminMuteAll && (
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => {
-                  setAdminMuteAll(false);
-                  socketRef.current.emit("unmute-all");
+            <div className={styles.row}>
+              <div className={styles.title}>Talk Permission For Others :</div>
+
+              <Switch
+                loading={loading}
+                checkedChildren={
+                  <FontAwesomeIcon size="lg" icon={faMicrophoneLines} />
+                }
+                unCheckedChildren={
+                  <FontAwesomeIcon size="lg" icon={faMicrophoneLinesSlash} />
+                }
+                onChange={(checked) => {
+                  setLoading(true);
+                  if (checked) {
+                    setAdminMuteAll(false);
+                    socketRef.current.emit("unmute-all");
+                  } else {
+                    setAdminMuteAll(true);
+                    socketRef.current.emit("mute-all");
+                  }
+                  setTimeout(() => {
+                    setLoading(false);
+                  }, 2000);
                 }}
-              >
-                Enable Talk
-              </Button>
-            )}
-            {!adminMuteAll && (
-              <Button
-                type="primary"
-                size="large"
-                danger
-                onClick={() => {
-                  setAdminMuteAll(true);
-                  socketRef.current.emit("mute-all");
+                defaultChecked={!adminMuteAll}
+              />
+            </div>
+            <div className={styles.row}>
+              <div className={styles.title}>Video Permission For Others :</div>
+
+              <Switch
+                loading={loading}
+                checkedChildren={<FontAwesomeIcon size="lg" icon={faVideo} />}
+                unCheckedChildren={
+                  <FontAwesomeIcon size="lg" icon={faVideoSlash} />
+                }
+                onChange={(checked) => {
+                  setLoading(true);
+                  if (checked) {
+                    setAdminStopCamAll(false);
+                    socketRef.current.emit("cam-on-all");
+                  } else {
+                    setAdminStopCamAll(true);
+                    socketRef.current.emit("cam-off-all");
+                  }
+                  setTimeout(() => {
+                    setLoading(false);
+                  }, 2000);
                 }}
-              >
-                Disable Talk
-              </Button>
-            )}
-            {adminStopCamAll && (
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => {
-                  setAdminStopCamAll(false);
-                  socketRef.current.emit("cam-on-all");
-                }}
-              >
-                Enable Video
-              </Button>
-            )}
-            {!adminStopCamAll && (
-              <Button
-                type="primary"
-                size="large"
-                danger
-                onClick={() => {
-                  setAdminStopCamAll(true);
-                  socketRef.current.emit("cam-off-all");
-                }}
-              >
-                Disable Video
-              </Button>
-            )}
+                defaultChecked={!adminStopCamAll}
+              />
+            </div>
           </>
         )}
       </Space>

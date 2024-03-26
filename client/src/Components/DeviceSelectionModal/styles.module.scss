@@ -1,0 +1,38 @@
+.button {
+  margin-block: 4px;
+  border: none;
+  background-color: #01989f;
+  padding: 10px;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  transition: all 250ms;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  &:hover:not(:disabled) {
+    background-color: #16acb4;
+  }
+  &:disabled {
+    background: linear-gradient(131deg, #01989f 30%, #ff5f36);
+    background-size: 400% 400%;
+    animation: AnimationName 8s ease infinite;
+    animation-play-state: running;
+    cursor: not-allowed;
+    color: black;
+    opacity: 0.8;
+    border: 1px solid black;
+  }
+}
+@keyframes AnimationName {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

@@ -7,11 +7,19 @@ import { ConfigProvider } from "antd";
 function App() {
   return (
     <BrowserRouter>
-
-        <Switch>
+      <Switch>
+        <ConfigProvider
+          theme={{
+            token: {
+              colorPrimary: "#01989F",
+              colorError: "#CC4C4C",
+            },
+          }}
+        >
           <Route path="/" exact component={CreateRoom} />
           <Route path="/room/:roomID/:userName" component={Room} />
-        </Switch>
+        </ConfigProvider>
+      </Switch>
     </BrowserRouter>
   );
 }

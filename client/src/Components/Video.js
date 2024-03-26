@@ -1,16 +1,14 @@
-import React, { memo, useEffect, useRef, useState } from "react";
-import { StyledVideo } from "./StyledVideo";
-import { generateRandomColor } from "../helpers/generateBorderColor";
-import styles from "./styles.module.css";
-import SoundVolumeMeter from "./SoundMeter";
-import { Button, Popover, Space, Tag } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEllipsisVertical,
   faMicrophoneSlash,
   faVideoSlash,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Button, Popover, Space, Tag } from "antd";
+import React, { memo, useEffect, useRef, useState } from "react";
+import SoundVolumeMeter from "./SoundMeter";
 import UserAgentType from "./UserAgentType";
+import styles from "./styles.module.css";
 
 const Video = ({
   dataChannelsRef,
@@ -270,11 +268,11 @@ const Video = ({
         return (
           <>
             <div
+              key={index}
               style={{ flexDirection: "column-reverse" }}
               className={`${styles.peerVideo} ${styles.videoFrame}`}
             >
               <video
-                key={index}
                 playsInline
                 autoPlay
                 ref={(videoRef) => {
@@ -283,7 +281,6 @@ const Video = ({
                     videoTagRefs.current.push(videoRef);
                   }
                 }}
-                borderColor={generateRandomColor()}
                 className={styles.video}
               />
               {forSoundTrackStream[index] && (

@@ -4,6 +4,7 @@ import React from "react";
 function PermissionsModal({ permissionDenied }) {
   return (
     <Modal
+      destroyOnClose
       centered
       onOk={() => {
         window.location.reload();

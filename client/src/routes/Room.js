@@ -73,7 +73,6 @@ const Room = () => {
           stream.addTrack(fakeVideoTrack);
           setVideoDeviceNotExist(true);
         }
-
         if (stream.getAudioTracks()[0]) {
           setActiveAudioDevice(
             stream.getAudioTracks()[0].getSettings().deviceId

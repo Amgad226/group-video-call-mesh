@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMicrophone, faVideo } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMicrophone,
+  faMicrophoneLines,
+  faVideo,
+} from "@fortawesome/free-solid-svg-icons";
 import { Button, Modal } from "antd";
-import { checkConnectionState } from "../helpers/checkConnectionState";
-
+import { checkConnectionState } from "../../helpers/checkConnectionState";
+import styles from "./styles.module.scss";
 const DeviceSelectionModal = ({
   showModal,
   setShowModal,
@@ -148,7 +152,8 @@ const DeviceSelectionModal = ({
 
   return (
     <Modal
-      title="Select device"
+      destroyOnClose
+      title="Avaliable Devices"
       open={showModal}
       onCancel={() => setShowModal(false)}
       footer={null}
@@ -156,49 +161,36 @@ const DeviceSelectionModal = ({
       <ul>
         {!forceMuted && devices?.audioinput && (
           <>
-            <div>Audio devices:</div>
+            <h3>Audio devices:</h3>
             {devices.audioinput.map((device) => (
               <button
+                className={styles.button}
                 type="primary"
                 key={device.deviceId}
                 disabled={activeAudioDevice === device.deviceId ? true : false}
                 onClick={() => handleDeviceSelect(device)}
-                style={{
-                  marginBlock: 4,
-                }}
               >
-                <FontAwesomeIcon
-                  icon={faMicrophone}
-                  style={{
-                    color:
-                      activeAudioDevice === device.deviceId ? "green" : "white",
-                  }}
-                />
-                {"  "}
+                <FontAwesomeIcon size="lg" icon={faMicrophoneLines} />
+
                 {device.label}
               </button>
             ))}
             <br />
           </>
         )}
+        <hr />
         {!forceVideoStoped && devices?.videoinput && (
           <>
-            <div>Video devices:</div>
+            <h3>Video devices:</h3>
             {devices.videoinput.map((device) => (
               <button
                 type="primary"
+                className={styles.button}
                 key={device.deviceId}
                 disabled={activeVideoDevice === device.deviceId ? true : false}
                 onClick={() => handleDeviceSelect(device)}
-                style={{ marginBlock: 4 }}
               >
-                <FontAwesomeIcon
-                  icon={faVideo}
-                  style={{
-                    color:
-                      activeVideoDevice === device.deviceId ? "green" : "white",
-                  }}
-                />
+                <FontAwesomeIcon size="lg" icon={faVideo} />
                 {"  "}
                 {device.label}
               </button>
