@@ -360,16 +360,6 @@ const Room = () => {
   }
 
   function handleForceLeave() {
-    clientStreamRef.current?.getTracks()?.forEach((track) => {
-      console.log(track);
-      track.stop();
-    });
-    if (shareScreenStreamRef.current) {
-      shareScreenStreamRef.current?.getTracks()?.forEach((track) => {
-        console.log(track);
-        track.stop();
-      });
-    }
     history.push("/");
   }
 
@@ -473,6 +463,27 @@ const Room = () => {
     return Send_dataChannel;
   }
 
+  useEffect(() => {
+    return () => {
+      console.log("unmount for room");
+      clientStreamRef.current?.getTracks()?.forEach((track) => {
+        track.stop();
+      });
+      if (shareScreenStreamRef.current) {
+        shareScreenStreamRef.current?.getTracks()?.forEach((track) => {
+          track.stop();
+        });
+      }
+      if (newTrackForLocalShareScreenRef.current) {
+        newTrackForLocalShareScreenRef.current
+          ?.getTracks()
+          ?.forEach((track) => {
+            track.stop();
+          });
+      }
+    };
+  }, []);
+
   return (
     <>
       <SettingsModal
@@ -551,6 +562,7 @@ const Room = () => {
           })}
         </Row>
         <ControlBar
+          newTrackForLocalShareScreenRef={newTrackForLocalShareScreenRef}
           addShareScreenWithNewTrack={addShareScreenWithNewTrack}
           clientStreamRef={clientStreamRef}
           setSettingModalOpen={setSettingModalOpen}

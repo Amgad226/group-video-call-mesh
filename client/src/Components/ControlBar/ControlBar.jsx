@@ -250,6 +250,10 @@ function ControlBar({
     // });
   };
 
+  const leaveRoom = () => {
+    history.push("/");
+  };
+
   return (
     <>
       <DeviceSelectionModal
@@ -474,18 +478,7 @@ function ControlBar({
             placement="topLeft"
             content={
               <Space direction="vertical">
-                <Button
-                  block
-                  danger
-                  type="primary"
-                  onClick={() => {
-                    history.push("/");
-                    clientStreamRef.current?.getTracks()?.forEach((track) => {
-                      console.log(track);
-                      track.stop();
-                    });
-                  }}
-                >
+                <Button block danger type="primary" onClick={leaveRoom}>
                   Leave Session
                 </Button>
                 {iAdmin && (
