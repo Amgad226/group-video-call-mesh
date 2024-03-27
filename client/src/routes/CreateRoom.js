@@ -117,14 +117,14 @@ const CreateRoom = (props) => {
             setOpen(true);
           }}
         >
-          xxs Create room xxs
+          sxxs Create room sxxs
         </StyledButton>
         <StyledButton
           onClick={() => {
             setOpen2(true);
           }}
         >
-          x Join Room x
+          sx Join Room xs
         </StyledButton>
       </Space>
     </Container>
