@@ -360,16 +360,6 @@ const Room = () => {
   }
 
   function handleForceLeave() {
-    clientStreamRef.current?.getTracks()?.forEach((track) => {
-      console.log(track);
-      track.stop();
-    });
-    if (shareScreenStreamRef.current) {
-      shareScreenStreamRef.current?.getTracks()?.forEach((track) => {
-        console.log(track);
-        track.stop();
-      });
-    }
     history.push("/");
   }
 
@@ -403,60 +393,6 @@ const Room = () => {
     newTrackForRemoteShareScreenRef.current = undefined;
   }
 
-  const addShareScreenWithNewTrack = () => {
-    navigator.mediaDevices
-      .getDisplayMedia({
-        audio: true,
-        video: true,
-      })
-      .then((newStream) => {
-        newTrackForLocalShareScreenRef.current = newStream;
-        setShareScreenMode({ owner: true, streamId: newStream.id });
-        peersRef.current.forEach((peerObj) => {
-          const coneectionState = peerObj.peer.connectionState;
-          if (checkConnectionState(coneectionState)) {
-            newStream.getTracks().forEach((track) => {
-              peerObj.peer.addTrack(track, newStream);
-            });
-          }
-        });
-        socketRef.current.emit("start-share-screen", {
-          streamID: newStream.id,
-        });
-        newStream.getVideoTracks()[0].onended = stopShareScreenWithNewTrack;
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
-
-  const stopShareScreenWithNewTrack = () => {
-    console.log(newTrackForLocalShareScreenRef.current);
-    newTrackForLocalShareScreenRef.current
-      .getTracks()
-      .forEach((track) => track.stop());
-    peersRef.current.forEach((peerObj) => {
-      const coneectionState = peerObj.peer.connectionState;
-      if (checkConnectionState(coneectionState)) {
-        const tracks = newTrackForLocalShareScreenRef.current?.getTracks();
-        const senders = peerObj?.peer?.getSenders();
-        const sendersToDelete = senders?.filter((sender) =>
-          tracks.map((track) => track.id).includes(sender.track?.id)
-        );
-        sendersToDelete.forEach((sender) => {
-          peerObj.peer.removeTrack(sender);
-        });
-      }
-    });
-    socketRef.current.emit("remove-stream", {
-      callerID: socketRef.current.id,
-      streamID: newTrackForLocalShareScreenRef.current.id,
-    });
-    newTrackForLocalShareScreenRef.current = undefined;
-    socketRef.current.emit("stop-share-screen");
-    setShareScreenMode({ owner: false, streamId: null });
-  };
-
   function Create_DataChannel(name, peer) {
     const dataChannelOptions = {
       ordered: false, // do not guarantee order
@@ -472,6 +408,42 @@ const Room = () => {
 
     return Send_dataChannel;
   }
+
+  useEffect(() => {
+    return () => {
+      console.log("unmount for room");
+      clientStreamRef.current?.getTracks()?.forEach((track) => {
+        track.stop();
+      });
+      if (shareScreenStreamRef.current) {
+        shareScreenStreamRef.current?.getTracks()?.forEach((track) => {
+          track.stop();
+        });
+      }
+      if (newTrackForLocalShareScreenRef.current) {
+        newTrackForLocalShareScreenRef.current
+          ?.getTracks()
+          ?.forEach((track) => {
+            track.stop();
+          });
+      }
+      console.log(newTrackForLocalShareScreenRef);
+      if (shareScreenMode.owner && shareScreenMode.streamId) {
+        console.log("emit");
+        socketRef.current.emit("remove-stream", {
+          callerID: socketRef.current.id,
+          streamID: newTrackForLocalShareScreenRef.current.id,
+        });
+        socketRef.current.emit("stop-share-screen");
+      }
+    };
+  }, []);
+  useEffect(() => {
+    console.log("shareScreenMode");
+    return () => {
+      console.log("shareScreenMode return");
+    };
+  }, [shareScreenMode]);
 
   return (
     <>
@@ -551,13 +523,13 @@ const Room = () => {
           })}
         </Row>
         <ControlBar
-          addShareScreenWithNewTrack={addShareScreenWithNewTrack}
+          setShareScreenMode={setShareScreenMode}
+          newTrackForLocalShareScreenRef={newTrackForLocalShareScreenRef}
           clientStreamRef={clientStreamRef}
           setSettingModalOpen={setSettingModalOpen}
           settingsModalOpen={settingsModalOpen}
           shareScreenMode={shareScreenMode}
           socketRef={socketRef}
-          stopShareScreenWithNewTrack={stopShareScreenWithNewTrack}
           dataChannelsRef={dataChannelsRef}
           forceMuted={forceMuted}
           forceVideoStoped={forceVideoStoped}
