@@ -191,7 +191,7 @@ function ControlBar({
           }
 
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
-          peersRef?.forEach((peerObj) => {
+          peersRef?.current?.forEach((peerObj) => {
             const coneectionState = peerObj.peer.connectionState;
 
             if (checkConnectionState(coneectionState)) {
@@ -225,7 +225,7 @@ function ControlBar({
   const endShareScreen = () => {
     const clientStreamVideo = clientStreamRef.current.getVideoTracks()[0];
 
-    peersRef?.forEach((peerObj) => {
+    peersRef?.current?.forEach((peerObj) => {
       const coneectionState = peerObj.peer.connectionState;
 
       if (checkConnectionState(coneectionState)) {
