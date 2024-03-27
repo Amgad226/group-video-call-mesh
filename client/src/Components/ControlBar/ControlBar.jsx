@@ -1,5 +1,4 @@
 import {
-  faBars,
   faDisplay,
   faGear,
   faGears,
@@ -16,17 +15,16 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button, Col, Menu, Popover, Row, Space } from "antd";
 import React, { useEffect, useState } from "react";
-import styles from "./styles.module.scss";
-import { isMobileDevice } from "../../helpers/isMobileDevice";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import { checkConnectionState } from "../../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../../helpers/createFakeVideoTrack";
-import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
-import DeviceSelectionModal from "../DeviceSelectionModal/DeviceSelectionModal";
 import { useWindowSize } from "../../hooks/useWindowSize";
+import DeviceSelectionModal from "../DeviceSelectionModal/DeviceSelectionModal";
+import styles from "./styles.module.scss";
 function ControlBar({
+  setShareScreenMode,
+  newTrackForLocalShareScreenRef,
   shareScreenMode,
-  addShareScreenWithNewTrack,
-  stopShareScreenWithNewTrack,
   setSettingModalOpen,
   socketRef,
   clientStreamRef,
@@ -248,6 +246,58 @@ function ControlBar({
     //   clientStreamRef.current = stream;
     //
     // });
+  };
+  const addShareScreenWithNewTrack = () => {
+    navigator.mediaDevices
+      .getDisplayMedia({
+        audio: true,
+        video: true,
+      })
+      .then((newStream) => {
+        newTrackForLocalShareScreenRef.current = newStream;
+        setShareScreenMode({ owner: true, streamId: newStream.id });
+        peers.forEach((peerObj) => {
+          const coneectionState = peerObj.peer.connectionState;
+          if (checkConnectionState(coneectionState)) {
+            newStream.getTracks().forEach((track) => {
+              peerObj.peer.addTrack(track, newStream);
+            });
+          }
+        });
+        socketRef.current.emit("start-share-screen", {
+          streamID: newStream.id,
+        });
+        newStream.getVideoTracks()[0].onended = stopShareScreenWithNewTrack;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  const stopShareScreenWithNewTrack = () => {
+    console.log(newTrackForLocalShareScreenRef.current);
+    newTrackForLocalShareScreenRef.current
+      .getTracks()
+      .forEach((track) => track.stop());
+    peers.forEach((peerObj) => {
+      const coneectionState = peerObj.peer.connectionState;
+      if (checkConnectionState(coneectionState)) {
+        const tracks = newTrackForLocalShareScreenRef.current?.getTracks();
+        const senders = peerObj?.peer?.getSenders();
+        const sendersToDelete = senders?.filter((sender) =>
+          tracks.map((track) => track.id).includes(sender.track?.id)
+        );
+        sendersToDelete.forEach((sender) => {
+          peerObj.peer.removeTrack(sender);
+        });
+      }
+    });
+    socketRef.current.emit("remove-stream", {
+      callerID: socketRef.current.id,
+      streamID: newTrackForLocalShareScreenRef.current.id,
+    });
+    newTrackForLocalShareScreenRef.current = undefined;
+    socketRef.current.emit("stop-share-screen");
+    setShareScreenMode({ owner: false, streamId: null });
   };
 
   const leaveRoom = () => {
