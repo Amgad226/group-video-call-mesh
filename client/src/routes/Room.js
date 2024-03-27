@@ -344,10 +344,7 @@ const Room = () => {
       (peer) => peer.peerID === userID
     );
     const newPeers = peersRef.current.filter((peer) => peer.peerID !== userID);
-    console.log("user leave");
-    console.log(userID);
-    console.log("removedPeer", removedPeer);
-    console.log("newPeers", newPeers);
+
     removedPeer[0]?.peer.close();
     peersRef.current = newPeers;
     setPeers(
@@ -357,6 +354,9 @@ const Room = () => {
         };
       })
     );
+    console.log("user leave", userID);
+    console.log("removedPeer", removedPeer);
+    console.log("newPeers", newPeers);
   }
 
   function handleForceLeave() {
@@ -427,23 +427,16 @@ const Room = () => {
             track.stop();
           });
       }
-      console.log(newTrackForLocalShareScreenRef);
-      if (shareScreenMode.owner && shareScreenMode.streamId) {
-        console.log("emit");
-        socketRef.current.emit("remove-stream", {
-          callerID: socketRef.current.id,
-          streamID: newTrackForLocalShareScreenRef.current.id,
-        });
-        socketRef.current.emit("stop-share-screen");
-      }
+      // if (shareScreenMode.owner && shareScreenMode.streamId) {
+      //   console.log("emit");
+      //   socketRef.current.emit("remove-stream", {
+      //     callerID: socketRef.current.id,
+      //     streamID: newTrackForLocalShareScreenRef.current.id,
+      //   });
+      //   socketRef.current.emit("stop-share-screen");
+      // }
     };
   }, []);
-  useEffect(() => {
-    console.log("shareScreenMode");
-    return () => {
-      console.log("shareScreenMode return");
-    };
-  }, [shareScreenMode]);
 
   return (
     <>

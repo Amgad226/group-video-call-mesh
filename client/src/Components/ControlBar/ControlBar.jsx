@@ -34,6 +34,7 @@ function ControlBar({
   dataChannelsRef,
   forceVideoStoped,
   peers,
+  peersRef,
   userVideo,
   videoDeviceNotExist,
   iAdmin,
@@ -190,7 +191,7 @@ function ControlBar({
           }
 
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
-          peers?.forEach((peerObj) => {
+          peersRef?.forEach((peerObj) => {
             const coneectionState = peerObj.peer.connectionState;
 
             if (checkConnectionState(coneectionState)) {
@@ -224,7 +225,7 @@ function ControlBar({
   const endShareScreen = () => {
     const clientStreamVideo = clientStreamRef.current.getVideoTracks()[0];
 
-    peers?.forEach((peerObj) => {
+    peersRef?.forEach((peerObj) => {
       const coneectionState = peerObj.peer.connectionState;
 
       if (checkConnectionState(coneectionState)) {
