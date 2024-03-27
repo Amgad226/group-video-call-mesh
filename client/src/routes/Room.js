@@ -523,6 +523,7 @@ const Room = () => {
           })}
         </Row>
         <ControlBar
+          peersRef={peersRef}
           setShareScreenMode={setShareScreenMode}
           newTrackForLocalShareScreenRef={newTrackForLocalShareScreenRef}
           clientStreamRef={clientStreamRef}
