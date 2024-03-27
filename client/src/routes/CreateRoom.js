@@ -117,7 +117,7 @@ const CreateRoom = (props) => {
             setOpen(true);
           }}
         >
-          xx Create room xx
+          xxs Create room xxs
         </StyledButton>
         <StyledButton
           onClick={() => {
