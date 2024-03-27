@@ -488,7 +488,14 @@ const Room = () => {
           </Col>
           {peers.map((peer, index) => {
             return (
-              <Col xs={24} md={12} lg={12} xl={8} xxl={6}>
+              <Col
+                xs={24}
+                md={12}
+                lg={12}
+                xl={8}
+                xxl={6}
+                key={peersRef.current[index].peerID}
+              >
                 <Video
                   dataChannelsRef={dataChannelsRef}
                   newTrackForRemoteShareScreenRef={

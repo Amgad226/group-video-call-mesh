@@ -268,14 +268,16 @@ const Video = ({
       {streams.map((stream, index) => {
         return (
           <>
-            <div className={`${styles.peerVideo} ${styles.videoFrame}`}>
+            <div
+              key={stream.id}
+              className={`${styles.peerVideo} ${styles.videoFrame}`}
+            >
               {!peerVideoState && (
                 <div className={styles.altContainer}>
                   <img src={img} className={styles.altImage} />
                 </div>
               )}
               <video
-                key={index}
                 playsInline
                 autoPlay
                 ref={(videoRef) => {
