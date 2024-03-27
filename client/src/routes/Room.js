@@ -261,12 +261,12 @@ const Room = () => {
     const item = peersRef.current.find(
       (peerRef) => peerRef.peerID === incoming.id
     );
-    console.log("new Ice", item);
-    console.log("state before", item?.peer.iceConnectionState);
+    // console.log("new Ice", item);
+    // console.log("state before", item?.peer.iceConnectionState);
     item.peer
       .addIceCandidate(candidate)
       .then(() => {
-        console.log("state after", item?.peer.iceConnectionState);
+        // console.log("state after", item?.peer.iceConnectionState);
       })
       .catch((e) => console.log(e));
   }
@@ -296,12 +296,12 @@ const Room = () => {
       const item = peersRef.current.find(
         (peerRef) => peerRef.peerID === userId
       );
-      console.log(
-        "before ice event to server",
-        userId,
-        item,
-        item?.peer.iceConnectionState
-      );
+      // console.log(
+      //   "before ice event to server",
+      //   userId,
+      //   item,
+      //   item?.peer.iceConnectionState
+      // );
       const payload = {
         userToSignal: userId,
         candidate: e.candidate,
