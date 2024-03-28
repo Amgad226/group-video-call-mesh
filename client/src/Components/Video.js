@@ -307,11 +307,12 @@ const Video = ({
                 key={stream.id}
                 className={`${styles.peerVideo} ${styles.videoFrame}`}
               >
-                {!peerVideoState && (
-                  <div className={styles.altContainer}>
-                    <img src={img} className={styles.altImage} />
-                  </div>
-                )}
+                {!peerVideoState &&
+                  index < 1 && ( // index < 1  for the share screen in new track
+                    <div className={styles.altContainer}>
+                      <img src={img} className={styles.altImage} />
+                    </div>
+                  )}
                 <video
                   playsInline
                   autoPlay
@@ -323,7 +324,8 @@ const Video = ({
                   }}
                   className={styles.video}
                   style={{
-                    ...(!peerVideoState ? { opacity: 0 } : {}),
+                    // index < 1  for the share screen in new track
+                    ...(!peerVideoState && index < 1 ? { opacity: 0 } : {}),
                   }}
                 />
                 <div className={styles.tagContainer}>
