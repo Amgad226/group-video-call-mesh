@@ -1,5 +1,5 @@
-const CONNECTION_CLOSED_THRESHOLD = 5; // Define the threshold value
-const CONNECTION_RETRY_THRESHOLD = 15; // Define the threshold value
+const CONNECTION_CLOSED_THRESHOLD = 10; // Define the threshold value
+const CONNECTION_RETRY_THRESHOLD = 100; // Define the threshold value
 
 export const checkAllPeersConnectionState = ({
   counters,
@@ -49,6 +49,7 @@ export const checkAllPeersConnectionState = ({
         anyFailedConnections = true;
         return null;
       } else {
+        // new or connecting
         if (connectionRetryCount < CONNECTION_RETRY_THRESHOLD) {
           // Update the counter for the current peer
           counters[peerID] = {
