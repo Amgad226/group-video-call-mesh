@@ -68,7 +68,7 @@ const Room = () => {
     } else {
       baseUrl = "http://localhost:3001";
     }
-    // baseUrl = "https://yorkbritishacademy.net/";
+    baseUrl = "https://yorkbritishacademy.net/";
 
     socketRef.current = io.connect(baseUrl);
 
@@ -447,7 +447,9 @@ const Room = () => {
       setLoading(false);
     } else if (connectedPeer.length === -1) {
       setConnectionFailedReason(
-        `your connection is failed with ${connectedPeer.failedUser.toString()}`
+        `your connection is failed with ${connectedPeer.failedUser
+          .join(" - ")
+          .toString()}`
       );
       setLoading(false);
     }
