@@ -102,3 +102,11 @@
     opacity: 0.5;
   }
 }
+.spinner {
+  min-width: 300px !important;
+  width: 100% !important;
+  max-width: 400px !important;
+  [class~="ant-spin-blur"]::after {
+    border-radius: 15px !important;
+  }
+}

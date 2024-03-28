@@ -29,6 +29,12 @@ const Room = () => {
   const peersRef = useRef([]);
 
   const [peers, setPeers] = useState([]);
+  const [connectedPeer, setConnectedPeers] = useState({
+    length: 0,
+    failedUser: [""],
+  });
+  const connectedPeersRef = useRef(0);
+
   const [iAdmin, setIAdmin] = useState(false);
   const [forceMuted, setForceMuted] = useState(false);
   const [forceVideoStoped, setForceVideoStoped] = useState(false);
@@ -48,7 +54,7 @@ const Room = () => {
   const [video, setVideo] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
   const [connectionFailedReason, setConnectionFailedReason] = useState();
-  const [fireCheckState, setFireCheckState] = useState(false);
+  // const [fireCheckState, setFireCheckState] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const history = useHistory();
@@ -160,10 +166,7 @@ const Room = () => {
     const peer = new RTCPeerConnection(iceConfig);
 
     peer.onicecandidate = (e) => handleICECandidateEvent(e, userID);
-    // peer.ontrack = handleTrackEvent;
-    // if (initiator) {
     peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID, peer);
-    // }
 
     return peer;
   }
@@ -270,7 +273,7 @@ const Room = () => {
     item.peer
       .addIceCandidate(candidate)
       .then(() => {
-        console.log("new Ice", incoming);
+        // console.log("new Ice", incoming, item.peer.connectionState);
       })
       .catch((e) => console.error(e));
   }
@@ -300,12 +303,7 @@ const Room = () => {
       const item = peersRef.current.find(
         (peerRef) => peerRef.peerID === userId
       );
-      // console.log(
-      //   "before ice event to server",
-      //   userId,
-      //   item,
-      //   item?.peer.iceConnectionState
-      // );
+      // console.log("onicecandidate", e, item.peer.connectionState);
       const payload = {
         userToSignal: userId,
         candidate: e.candidate,
@@ -341,7 +339,7 @@ const Room = () => {
         peers.push(peerObj);
       });
       setPeers(peers);
-      setFireCheckState(true);
+      // setFireCheckState(true);
     }
   }
 
@@ -443,20 +441,32 @@ const Room = () => {
     };
   }, []);
 
-  //By Chat gpt
   useEffect(() => {
-    if (loading && fireCheckState && peers) {
-      // Create an object to store counters for each peer
-
-      checkAllPeersConnectionState({
-        counters: {},
-        peers,
-        setConnectionFailedReason,
-        setFireCheckState,
-        setLoading,
-      }); // Call the function initially
+    console.log(connectedPeer);
+    if (connectedPeer.length === peers.length) {
+      setLoading(false);
+    } else if (connectedPeer.length === -1) {
+      setConnectionFailedReason(
+        `your connection is failed with ${connectedPeer.failedUser.toString()}`
+      );
+      setLoading(false);
     }
-  }, [fireCheckState, peers]);
+  }, [connectedPeer]);
+
+  //By Chat gpt
+  // useEffect(() => {
+  //   if (loading && fireCheckState && peers) {
+  //     // Create an object to store counters for each peer
+
+  //     checkAllPeersConnectionState({
+  //       counters: {},
+  //       peers,
+  //       setConnectionFailedReason,
+  //       setFireCheckState,
+  //       setLoading,
+  //     }); // Call the function initially
+  //   }
+  // }, [fireCheckState, peers]);
 
   return (
     <>
@@ -471,7 +481,7 @@ const Room = () => {
           setConnectionFailedReason(undefined);
         }}
       >
-        your connection is {connectionFailedReason}
+        {connectionFailedReason}
       </Modal>
       <SettingsModal
         adminMuteAll={adminMuteAll}
@@ -531,6 +541,10 @@ const Room = () => {
                   key={peersRef.current[index].peerID}
                 >
                   <Video
+                    connectedPeersRef={connectedPeersRef}
+                    peersRef={peersRef}
+                    setConnectedPeers={setConnectedPeers}
+                    setPeers={setPeers}
                     dataChannelsRef={dataChannelsRef}
                     newTrackForRemoteShareScreenRef={
                       newTrackForRemoteShareScreenRef

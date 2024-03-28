@@ -4,7 +4,7 @@ import {
   faVideoSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, Popover, Space, Tag } from "antd";
+import { Button, Popover, Space, Spin, Tag } from "antd";
 import React, { memo, useEffect, useRef, useState } from "react";
 import SoundVolumeMeter from "./SoundMeter";
 import UserAgentType from "./UserAgentType";
@@ -22,6 +22,10 @@ const Video = ({
   iAdmin,
   id,
   socket,
+  connectedPeersRef,
+  setConnectedPeers,
+  peersRef,
+  setPeers,
 }) => {
   const videoTagRefs = useRef([]);
   const streamsRefs = useRef([]);
@@ -31,11 +35,38 @@ const Video = ({
   const [streams, setStreams] = useState([]);
   const [peerVideoState, setPeerVideoState] = useState(peerObj.video);
   const [peerVoiceState, setPeerVoiceState] = useState(peerObj.voice);
-
+  const [connectedPeer, setConnectedPeer] = useState(false);
   const [dataChannelCreated, setDataChannelCreated] = useState(false);
+
   useEffect(() => {
     peerObj.peer.ontrack = handleTrackEvent;
     peerObj.peer.ondatachannel = receiveChannelCallback;
+    peerObj.peer.onconnectionstatechange = (e) => {
+      console.log("connectionState", e.target.connectionState, id);
+      if (e.target.connectionState === "connected") {
+        setConnectedPeer(true);
+        connectedPeersRef.current = connectedPeersRef.current + 1;
+        setConnectedPeers({
+          length: connectedPeersRef.current,
+          failedUser: [""],
+        });
+      } else if (
+        e.target.connectionState === "failed" ||
+        e.target.connectionState === "disconnected"
+      ) {
+        const newPeers = peersRef.current.filter(
+          (peerObj) => peerObj.peerID !== id
+        );
+        peersRef.current = newPeers;
+        setPeers([...peersRef.current]);
+        setConnectedPeers(({ failedUser }) => {
+          return {
+            length: -1,
+            failedUser: [...failedUser, peerObj.userName],
+          };
+        });
+      }
+    };
   }, [shareScreenStreamId]);
 
   useEffect(() => {
@@ -85,6 +116,13 @@ const Video = ({
       }
     }
   }, [shareScreenStreamId]);
+
+  useEffect(() => {
+    console.log(peerObj.peer.connectionState);
+    if (peerObj.peer.connectionState === "connected") {
+      setConnectedPeer(true);
+    }
+  }, [peerObj.peer.connectionState]);
 
   const requestFullScreen = (ref) => {
     if (ref.requestFullscreen) {
@@ -256,84 +294,93 @@ const Video = ({
 
   return (
     <>
-      {streams.map((stream, index) => {
-        return (
-          <>
-            <div
-              key={stream.id}
-              className={`${styles.peerVideo} ${styles.videoFrame}`}
-            >
-              {!peerVideoState && (
-                <div className={styles.altContainer}>
-                  <img src={img} className={styles.altImage} />
-                </div>
-              )}
-              <video
-                playsInline
-                autoPlay
-                ref={(videoRef) => {
-                  if (videoRef && stream) {
-                    videoRef.srcObject = stream;
-                    videoTagRefs.current.push(videoRef);
-                  }
-                }}
-                className={styles.video}
-                style={{
-                  ...(!peerVideoState ? { opacity: 0 } : {}),
-                }}
-              />
-              <div className={styles.tagContainer}>
-                <Space>
-                  <UserAgentType agentType={peerObj.userAgent} />
-                  <Popover
-                    placement="bottomRight"
-                    content={Actions(videoTagRefs.current[index])}
-                    trigger="click"
-                  >
-                    <Button
-                      type="default"
-                      shape="circle"
-                      icon={
-                        <FontAwesomeIcon
-                          icon={faEllipsisVertical}
-                          className={styles.options}
-                        />
-                      }
-                    />
-                  </Popover>
-                </Space>
-                {peerObj.isAdmin && (
-                  <Tag className={styles.tag} color="#13181e">
-                    Owner
-                  </Tag>
+      <Spin
+        spinning={!connectedPeer}
+        rootClassName={styles.spinner}
+        className={styles.spinner}
+        wrapperClassName={styles.spinner}
+      >
+        {streams.map((stream, index) => {
+          return (
+            <>
+              <div
+                key={stream.id}
+                className={`${styles.peerVideo} ${styles.videoFrame}`}
+              >
+                {!peerVideoState && (
+                  <div className={styles.altContainer}>
+                    <img src={img} className={styles.altImage} />
+                  </div>
                 )}
-              </div>
-              {forSoundTrackStream[index] && (
-                <div className={styles.soundMeterContainer}>
-                  <SoundVolumeMeter mediaStream={forSoundTrackStream[index]} />
+                <video
+                  playsInline
+                  autoPlay
+                  ref={(videoRef) => {
+                    if (videoRef && stream) {
+                      videoRef.srcObject = stream;
+                      videoTagRefs.current.push(videoRef);
+                    }
+                  }}
+                  className={styles.video}
+                  style={{
+                    ...(!peerVideoState ? { opacity: 0 } : {}),
+                  }}
+                />
+                <div className={styles.tagContainer}>
+                  <Space>
+                    <UserAgentType agentType={peerObj.userAgent} />
+                    <Popover
+                      placement="bottomRight"
+                      content={Actions(videoTagRefs.current[index])}
+                      trigger="click"
+                    >
+                      <Button
+                        type="default"
+                        shape="circle"
+                        icon={
+                          <FontAwesomeIcon
+                            icon={faEllipsisVertical}
+                            className={styles.options}
+                          />
+                        }
+                      />
+                    </Popover>
+                  </Space>
+                  {peerObj.isAdmin && (
+                    <Tag className={styles.tag} color="#13181e">
+                      Owner
+                    </Tag>
+                  )}
                 </div>
-              )}
-              <div className={styles.mediaContainer}>
-                <div className={styles.userName}>{peerObj.userName}</div>
-                <Space>
-                  {!peerVoiceState && (
-                    <FontAwesomeIcon
-                      className={styles.remoteIcon}
-                      icon={faMicrophoneSlash}
+                {forSoundTrackStream[index] && (
+                  <div className={styles.soundMeterContainer}>
+                    <SoundVolumeMeter
+                      mediaStream={forSoundTrackStream[index]}
                     />
-                  )}
-                  {!peerVideoState && (
-                    <FontAwesomeIcon
-                      className={styles.remoteIcon}
-                      icon={faVideoSlash}
-                    />
-                  )}
-                </Space>
+                  </div>
+                )}
+                <div className={styles.mediaContainer}>
+                  <div className={styles.userName}>{peerObj.userName}</div>
+                  <Space>
+                    {!peerVoiceState && (
+                      <FontAwesomeIcon
+                        className={styles.remoteIcon}
+                        icon={faMicrophoneSlash}
+                      />
+                    )}
+                    {!peerVideoState && (
+                      <FontAwesomeIcon
+                        className={styles.remoteIcon}
+                        icon={faVideoSlash}
+                      />
+                    )}
+                  </Space>
+                </div>
               </div>
-            </div>
-          </>
-        );
-      })}
+            </>
+          );
+        })}
+      </Spin>
     </>
   );
 };
