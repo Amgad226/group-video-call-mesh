@@ -34,7 +34,6 @@ const Video = ({
 
   const [dataChannelCreated, setDataChannelCreated] = useState(false);
   useEffect(() => {
-    console.log(peerObj);
     peerObj.peer.ontrack = handleTrackEvent;
     peerObj.peer.ondatachannel = receiveChannelCallback;
   }, [shareScreenStreamId]);
@@ -56,13 +55,12 @@ const Video = ({
 
   useEffect(() => {
     if (removedStreamID) {
-      console.log(streamsRefs.current);
       const newStreams = streamsRefs.current.filter(
         (stream) => stream.id !== removedStreamID
       );
       streamsRefs.current = newStreams;
       setStreams([...streamsRefs.current]);
-      console.log(streamsRefs.current);
+
       setRemoveStreamObj();
     }
   }, [removedStreamID]);
@@ -70,12 +68,9 @@ const Video = ({
   useEffect(() => {
     //if the server event reviced after the track event
     if (shareScreenStreamId) {
-      console.log(shareScreenStreamId);
       const shareScreenStream = streamsRefs.current.find(
         (stream) => stream.id == shareScreenStreamId
       );
-      console.log("shareScreenStream", shareScreenStream);
-      console.log("shareScreenStream", streamsRefs.current);
 
       if (shareScreenStream) {
         newTrackForRemoteShareScreenRef.current = shareScreenStream;
@@ -187,7 +182,6 @@ const Video = ({
     </>
   );
   const handleTrackEvent = (e) => {
-    console.log("from track", e);
     console.log("from track", e.streams[0].getTracks());
     const existStream = streamsRefs.current.find(
       (stream) => stream.id === e.streams[0].id
@@ -205,8 +199,6 @@ const Video = ({
         (stream) => stream.id == shareScreenStreamId
       );
       if (shareScreenStream) {
-        console.log("shareScreenStream", shareScreenStream);
-        console.log("shareScreenStream", streamsRefs.current);
         newTrackForRemoteShareScreenRef.current = shareScreenStream;
         const newStreams = streamsRefs.current.filter(
           (stream) => stream.id !== shareScreenStreamId
@@ -232,7 +224,6 @@ const Video = ({
   var onReceive_ChannelMessageCallback = function (event) {
     console.log("dataChannel.message", event);
     const data = JSON.parse(event.data);
-    console.log(data);
     const messageType = data.type;
     switch (messageType) {
       case "video-toggle":
@@ -253,7 +244,7 @@ const Video = ({
     }
   };
   var onReceive_ChannelErrorState = function (error) {
-    console.log("dataChannel.OnError:", error);
+    console.error("dataChannel.OnError:", error);
   };
   var onReceive_ChannelCloseStateChange = function (event) {
     const newDataChannels = dataChannelsRef.current.filter(

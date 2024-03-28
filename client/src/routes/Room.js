@@ -49,7 +49,7 @@ const Room = () => {
   const [connectionFailedReason, setConnectionFailedReason] = useState();
   const [fireCheckState, setFireCheckState] = useState(false);
   const [loading, setLoading] = useState(true);
-  
+
   const history = useHistory();
   const { roomID, userName } = useParams();
 
@@ -61,6 +61,8 @@ const Room = () => {
     } else {
       baseUrl = "http://localhost:3001";
     }
+    // baseUrl = "https://yorkbritishacademy.net/";
+
     socketRef.current = io.connect(baseUrl);
 
     getAvaliableUserMedia()
@@ -73,7 +75,7 @@ const Room = () => {
           );
         } else {
           const fakeVideoTrack = createFakeVideoTrack();
-          console.log(fakeVideoTrack);
+
           stream.addTrack(fakeVideoTrack);
           setVideoDeviceNotExist(true);
         }
@@ -129,7 +131,7 @@ const Room = () => {
 
       .catch((err) => {
         setPermissionDenied(err.toString());
-        console.log(err);
+        console.error(err);
       });
   }
 
@@ -183,7 +185,6 @@ const Room = () => {
         const hasTaraks = peer
           .getSenders()
           .filter((sender) => sender.track !== null);
-        console.log(hasTaraks);
         if (hasTaraks.length == 0) {
           // for check if the peer has tarck already to not add the same track twice
           if (shareScreenStreamRef.current) {
@@ -256,8 +257,8 @@ const Room = () => {
     const item = peersRef.current.find(
       (peerRef) => peerRef.peerID === message.id
     );
-    console.log("item", item);
-    item.peer.setRemoteDescription(desc).catch((e) => console.log(e));
+
+    item.peer.setRemoteDescription(desc).catch((e) => console.error(e));
   }
 
   function handleNewICECandidateMsg(incoming) {
@@ -265,14 +266,12 @@ const Room = () => {
     const item = peersRef.current.find(
       (peerRef) => peerRef.peerID === incoming.id
     );
-    // console.log("new Ice", item);
-    // console.log("state before", item?.peer.iceConnectionState);
     item.peer
       .addIceCandidate(candidate)
       .then(() => {
-        // console.log("state after", item?.peer.iceConnectionState);
+        console.log("new Ice", incoming);
       })
-      .catch((e) => console.log(e));
+      .catch((e) => console.error(e));
   }
 
   function handleNegotiationNeededEvent(userID, peer) {
@@ -291,7 +290,7 @@ const Room = () => {
           };
           socketRef.current.emit("offer", payload);
         })
-        .catch((e) => console.log(e));
+        .catch((e) => console.error(e));
     }
   }
 
@@ -417,7 +416,6 @@ const Room = () => {
 
   useEffect(() => {
     return () => {
-      console.log("unmount for room");
       clientStreamRef.current?.getTracks()?.forEach((track) => {
         track.stop();
       });
@@ -444,66 +442,97 @@ const Room = () => {
     };
   }, []);
 
+  //By Chat gpt
   useEffect(() => {
-    // Function to check connection states
-
     if (loading && fireCheckState) {
       const CONNECTION_CLOSED_THRESHOLD = 5; // Define the threshold value
-      let closedConnections = 0; // Counter variable for failed connections
+      const CONNECTION_RETRY_THRESHOLD = 15; // Define the threshold value
 
-      const CONNECTION_RETRY_THRESHOLD = 10; // Define the threshold value
-      let retryConnections = 0; // Counter variable for failed connections
+      // Create an object to store counters for each peer
+      let counters = {};
 
       const checkConnectionStates = () => {
-        if (retryConnections === CONNECTION_RETRY_THRESHOLD) {
-          setConnectionFailedReason("timeout");
-          setLoading(false);
+        let allConnected = true;
+        let anyClosedConnections = false;
+        let anyFailedConnections = false;
+        let anyRetryConnectionsExceededThreshold = false;
+
+        const updatedPeers = peers.map((peerObj) => {
+          const { peerID, peer } = peerObj;
+
+          console.warn(
+            peer.connectionState,
+            peerID,
+            counters[peerID]?.connectionClosedCount,
+            counters[peerID]?.connectionRetryCount
+          );
+
+          // Retrieve the counters for the current peer from the counters object
+          const { connectionClosedCount = 0, connectionRetryCount = 0 } =
+            counters[peerID] || {};
+
+          if (peer.connectionState === "connected") {
+            return peerObj;
+          } else if (peer.connectionState === "closed") {
+            if (connectionClosedCount < CONNECTION_CLOSED_THRESHOLD) {
+              // Update the counter for the current peer
+              counters[peerID] = {
+                connectionClosedCount: connectionClosedCount + 1,
+                connectionRetryCount,
+              };
+              return { peerID, peer };
+            } else {
+              anyClosedConnections = true;
+              return null;
+            }
+          } else if (
+            peer.connectionState === "failed" ||
+            peer.connectionState === "disconnected"
+          ) {
+            anyFailedConnections = true;
+            return null;
+          } else {
+            if (connectionRetryCount < CONNECTION_RETRY_THRESHOLD) {
+              // Update the counter for the current peer
+              counters[peerID] = {
+                connectionClosedCount,
+                connectionRetryCount: connectionRetryCount + 1,
+              };
+              return { peerID, peer };
+            } else {
+              anyRetryConnectionsExceededThreshold = true;
+              return null;
+            }
+          }
+        });
+
+        const filteredPeers = updatedPeers.filter(Boolean);
+        if (filteredPeers.length === 0) {
+          setConnectionFailedReason(
+            anyClosedConnections
+              ? "closed"
+              : anyRetryConnectionsExceededThreshold
+              ? "timeout"
+              : "failed"
+          );
           setFireCheckState(false);
+          setLoading(false);
           return;
         }
-        if (peers.length > 0) {
-          const allConnected = peers.every((peerObj) => {
-            console.warn(peerObj.peer.connectionState);
-            return peerObj.peer.connectionState === "connected";
-          });
-          const failedConnected = peers.some(
-            (peerObj) =>
-              peerObj.peer.connectionState === "faild" ||
-              peerObj.peer.connectionState === "disconnected"
-          );
-          const closedConnected = peers.some(
-            (peerObj) => peerObj.peer.connectionState === "closed"
-          );
-          if (closedConnected) {
-            closedConnections++;
-          }
 
-          if (failedConnected) {
-            setConnectionFailedReason("failed");
-            setFireCheckState(false);
-            setLoading(false);
-            return;
-          } else if (closedConnections === CONNECTION_CLOSED_THRESHOLD) {
-            setConnectionFailedReason("closed");
-            setFireCheckState(false);
-            setLoading(false);
-            return;
-          } else if (!allConnected) {
-            setTimeout(() => {
-              // Recall the function after a short delay
-              checkConnectionStates();
-            }, 1000); // Adjust the delay as needed
-          } else {
-            setLoading(false);
-            setFireCheckState(false);
-          }
+        allConnected = filteredPeers.every(
+          (peerObj) => peerObj.peer.connectionState === "connected"
+        );
+
+        if (!allConnected) {
+          setTimeout(checkConnectionStates, 1000); // Recall the function after a short delay
+        } else {
+          setLoading(false);
+          setFireCheckState(false);
         }
-        retryConnections++;
       };
 
-      // Call the function initially
-
-      checkConnectionStates();
+      checkConnectionStates(); // Call the function initially
     }
   }, [fireCheckState, peers]);
 
