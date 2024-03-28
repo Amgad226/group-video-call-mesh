@@ -15,9 +15,11 @@ import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { getUserAgent } from "../helpers/getUserAgent";
 import styles from "./styles.module.scss";
-import { Col, Row } from "antd";
+import { Col, Row, Spin } from "antd";
 
 const Room = () => {
+  const [loading, setLoding] = useState(false);
+
   const socketRef = useRef();
   const userVideo = useRef();
   const clientStreamRef = useRef();
@@ -62,6 +64,7 @@ const Room = () => {
 
     getAvaliableUserMedia()
       .then((stream) => {
+        setLoding(true);
         if (stream.getVideoTracks()[0]) {
           stream.getVideoTracks()[0].enabled = false;
           setActiveVideoDevice(
@@ -309,34 +312,35 @@ const Room = () => {
       socketRef.current.emit("ice-candidate", payload);
     }
   }
-
   function handleAllUsersEvent(users) {
     console.log(users);
     const peers = [];
     if (users.length === 0) {
+      setLoding(false);
       setIAdmin(true);
+    } else {
+      users.forEach((remotePeer) => {
+        //user id is the old socket_id already in room
+        const peer = callUser(
+          remotePeer.id, // the old user socket id
+          socketRef.current.id, // new user socket id
+          shareScreenStreamRef.current ?? clientStreamRef.current // stream for new user
+        );
+        // the peer is the peer of the new user
+        const peerObj = {
+          peerID: remotePeer.id,
+          isAdmin: remotePeer.isAdmin,
+          voice: remotePeer.voice,
+          video: remotePeer.video,
+          userName: remotePeer.userName,
+          userAgent: remotePeer.userAgent,
+          peer,
+        };
+        peersRef.current.push(peerObj);
+        peers.push(peerObj);
+      });
+      setPeers(peers);
     }
-    users.forEach((remotePeer) => {
-      //user id is the old socket_id already in room
-      const peer = callUser(
-        remotePeer.id, // the old user socket id
-        socketRef.current.id, // new user socket id
-        shareScreenStreamRef.current ?? clientStreamRef.current // stream for new user
-      );
-      // the peer is the peer of the new user
-      const peerObj = {
-        peerID: remotePeer.id,
-        isAdmin: remotePeer.isAdmin,
-        voice: remotePeer.voice,
-        video: remotePeer.video,
-        userName: remotePeer.userName,
-        userAgent: remotePeer.userAgent,
-        peer,
-      };
-      peersRef.current.push(peerObj);
-      peers.push(peerObj);
-    });
-    setPeers(peers);
   }
 
   function handleUserLeave(userID) {
@@ -438,6 +442,25 @@ const Room = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (peers.length > 0) {
+      let userConnected = 0;
+      peers.forEach((peerObj) => {
+        const coneectionState = peerObj.peer.connectionState;
+        if (checkConnectionState(coneectionState)) {
+          userConnected++;
+        }
+      });
+      if (peers.length === userConnected) {
+        setLoding(false);
+      } else {
+        setLoding(false);
+        alert("you have connection problem");
+      }
+      console.log(peers.length, userConnected);
+    }
+  }, [peers]);
+
   return (
     <>
       <SettingsModal
@@ -451,106 +474,108 @@ const Room = () => {
         socketRef={socketRef}
       />
       <PermissionsModal permissionDenied={permissionDenied} />
-      <div className={styles.container}>
-        <Header peers={peers} />
+      <Spin spinning={loading}>
+        <div className={styles.container}>
+          <Header peers={peers} />
 
-        <Row
-          gutter={[15, 0]}
-          justify={"center"}
-          align={"middle"}
-          className={styles.framesContainer}
-        >
-          {shareScreenMode.streamId && (
-            <Col xs={24}>
-              <ShareScreen
-                streamRef={
-                  newTrackForRemoteShareScreenRef.current
-                    ? newTrackForRemoteShareScreenRef
-                    : newTrackForLocalShareScreenRef
-                }
-              />
-            </Col>
-          )}
-          <Col xs={24} md={12} lg={12} xl={8} xxl={6}>
-            <ClientVideo
-              userName={userName}
-              userVideo={userVideo}
-              peers={peers}
-              clientStreamRef={clientStreamRef}
-              isAdmin={iAdmin}
-              activeAudioDevice={activeAudioDevice}
-              activeVideoDevice={activeVideoDevice}
-              setActiveVideoDevice={setActiveVideoDevice}
-              setActiveAudioDevice={setActiveAudioDevice}
-              screenSharing={screenSharing}
-              video={video}
-            />
-          </Col>
-          {peers.map((peer, index) => {
-            return (
-              <Col
-                xs={24}
-                md={12}
-                lg={12}
-                xl={8}
-                xxl={6}
-                key={peersRef.current[index].peerID}
-              >
-                <Video
-                  dataChannelsRef={dataChannelsRef}
-                  newTrackForRemoteShareScreenRef={
-                    newTrackForRemoteShareScreenRef
-                  }
-                  shareScreenStreamId={shareScreenMode.streamId}
-                  setShareScreenMode={setShareScreenMode}
-                  id={peersRef.current[index].peerID}
-                  key={peersRef.current[index].peerID}
-                  peerObj={peer}
-                  iAdmin={iAdmin}
-                  socket={socketRef.current}
-                  setRemoveStreamObj={setRemoveStreamObj}
-                  removedStreamID={
-                    removedStreamObj
-                      ? peersRef.current[index].peerID ==
-                        removedStreamObj.callerID
-                        ? removedStreamObj.streamID
-                        : false
-                      : false
+          <Row
+            gutter={[15, 0]}
+            justify={"center"}
+            align={"middle"}
+            className={styles.framesContainer}
+          >
+            {shareScreenMode.streamId && (
+              <Col xs={24}>
+                <ShareScreen
+                  streamRef={
+                    newTrackForRemoteShareScreenRef.current
+                      ? newTrackForRemoteShareScreenRef
+                      : newTrackForLocalShareScreenRef
                   }
                 />
               </Col>
-            );
-          })}
-        </Row>
-        <ControlBar
-          peersRef={peersRef}
-          setShareScreenMode={setShareScreenMode}
-          newTrackForLocalShareScreenRef={newTrackForLocalShareScreenRef}
-          clientStreamRef={clientStreamRef}
-          setSettingModalOpen={setSettingModalOpen}
-          settingsModalOpen={settingsModalOpen}
-          shareScreenMode={shareScreenMode}
-          socketRef={socketRef}
-          dataChannelsRef={dataChannelsRef}
-          forceMuted={forceMuted}
-          forceVideoStoped={forceVideoStoped}
-          iAdmin={iAdmin}
-          peers={peers}
-          shareScreenStreamRef={shareScreenStreamRef}
-          userVideo={userVideo}
-          videoDeviceNotExist={videoDeviceNotExist}
-          screenSharing={screenSharing}
-          setScreenSharing={setScreenSharing}
-          setUnMute={setUnMute}
-          setVideo={setVideo}
-          unMute={unMute}
-          video={video}
-          activeAudioDevice={activeAudioDevice}
-          activeVideoDevice={activeVideoDevice}
-          setActiveAudioDevice={setActiveAudioDevice}
-          setActiveVideoDevice={setActiveVideoDevice}
-        />
-      </div>
+            )}
+            <Col xs={24} md={12} lg={12} xl={8} xxl={6}>
+              <ClientVideo
+                userName={userName}
+                userVideo={userVideo}
+                peers={peers}
+                clientStreamRef={clientStreamRef}
+                isAdmin={iAdmin}
+                activeAudioDevice={activeAudioDevice}
+                activeVideoDevice={activeVideoDevice}
+                setActiveVideoDevice={setActiveVideoDevice}
+                setActiveAudioDevice={setActiveAudioDevice}
+                screenSharing={screenSharing}
+                video={video}
+              />
+            </Col>
+            {peers.map((peer, index) => {
+              return (
+                <Col
+                  xs={24}
+                  md={12}
+                  lg={12}
+                  xl={8}
+                  xxl={6}
+                  key={peersRef.current[index].peerID}
+                >
+                  <Video
+                    dataChannelsRef={dataChannelsRef}
+                    newTrackForRemoteShareScreenRef={
+                      newTrackForRemoteShareScreenRef
+                    }
+                    shareScreenStreamId={shareScreenMode.streamId}
+                    setShareScreenMode={setShareScreenMode}
+                    id={peersRef.current[index].peerID}
+                    key={peersRef.current[index].peerID}
+                    peerObj={peer}
+                    iAdmin={iAdmin}
+                    socket={socketRef.current}
+                    setRemoveStreamObj={setRemoveStreamObj}
+                    removedStreamID={
+                      removedStreamObj
+                        ? peersRef.current[index].peerID ==
+                          removedStreamObj.callerID
+                          ? removedStreamObj.streamID
+                          : false
+                        : false
+                    }
+                  />
+                </Col>
+              );
+            })}
+          </Row>
+          <ControlBar
+            peersRef={peersRef}
+            setShareScreenMode={setShareScreenMode}
+            newTrackForLocalShareScreenRef={newTrackForLocalShareScreenRef}
+            clientStreamRef={clientStreamRef}
+            setSettingModalOpen={setSettingModalOpen}
+            settingsModalOpen={settingsModalOpen}
+            shareScreenMode={shareScreenMode}
+            socketRef={socketRef}
+            dataChannelsRef={dataChannelsRef}
+            forceMuted={forceMuted}
+            forceVideoStoped={forceVideoStoped}
+            iAdmin={iAdmin}
+            peers={peers}
+            shareScreenStreamRef={shareScreenStreamRef}
+            userVideo={userVideo}
+            videoDeviceNotExist={videoDeviceNotExist}
+            screenSharing={screenSharing}
+            setScreenSharing={setScreenSharing}
+            setUnMute={setUnMute}
+            setVideo={setVideo}
+            unMute={unMute}
+            video={video}
+            activeAudioDevice={activeAudioDevice}
+            activeVideoDevice={activeVideoDevice}
+            setActiveAudioDevice={setActiveAudioDevice}
+            setActiveVideoDevice={setActiveVideoDevice}
+          />
+        </div>
+      </Spin>
     </>
   );
 };
