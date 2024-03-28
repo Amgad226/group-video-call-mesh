@@ -15,11 +15,9 @@ import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { getUserAgent } from "../helpers/getUserAgent";
 import styles from "./styles.module.scss";
-import { Col, Row, Spin } from "antd";
+import { Col, Modal, Row, Spin } from "antd";
 
 const Room = () => {
-  const [loading, setLoding] = useState(false);
-
   const socketRef = useRef();
   const userVideo = useRef();
   const clientStreamRef = useRef();
@@ -48,7 +46,10 @@ const Room = () => {
   const [unMute, setUnMute] = useState(false);
   const [video, setVideo] = useState(false);
   const [screenSharing, setScreenSharing] = useState(false);
-
+  const [connectionFailedReason, setConnectionFailedReason] = useState();
+  const [fireCheckState, setFireCheckState] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
   const history = useHistory();
   const { roomID, userName } = useParams();
 
@@ -64,7 +65,7 @@ const Room = () => {
 
     getAvaliableUserMedia()
       .then((stream) => {
-        setLoding(true);
+        setLoading(true);
         if (stream.getVideoTracks()[0]) {
           stream.getVideoTracks()[0].enabled = false;
           setActiveVideoDevice(
@@ -316,7 +317,7 @@ const Room = () => {
     console.log(users);
     const peers = [];
     if (users.length === 0) {
-      setLoding(false);
+      setLoading(false);
       setIAdmin(true);
     } else {
       users.forEach((remotePeer) => {
@@ -340,6 +341,7 @@ const Room = () => {
         peers.push(peerObj);
       });
       setPeers(peers);
+      setFireCheckState(true);
     }
   }
 
@@ -443,26 +445,83 @@ const Room = () => {
   }, []);
 
   useEffect(() => {
-    if (peers.length > 0) {
-      let userConnected = 0;
-      peers.forEach((peerObj) => {
-        const coneectionState = peerObj.peer.connectionState;
-        if (checkConnectionState(coneectionState)) {
-          userConnected++;
+    // Function to check connection states
+
+    if (loading && fireCheckState) {
+      const CONNECTION_CLOSED_THRESHOLD = 5; // Define the threshold value
+      let closedConnections = 0; // Counter variable for failed connections
+
+      const CONNECTION_RETRY_THRESHOLD = 10; // Define the threshold value
+      let retryConnections = 0; // Counter variable for failed connections
+
+      const checkConnectionStates = () => {
+        if (retryConnections === CONNECTION_RETRY_THRESHOLD) {
+          setConnectionFailedReason("timeout");
+          setLoading(false);
+          setFireCheckState(false);
+          return;
         }
-      });
-      if (peers.length === userConnected) {
-        setLoding(false);
-      } else {
-        setLoding(false);
-        alert("you have connection problem");
-      }
-      console.log(peers.length, userConnected);
+        if (peers.length > 0) {
+          const allConnected = peers.every((peerObj) => {
+            console.warn(peerObj.peer.connectionState);
+            return peerObj.peer.connectionState === "connected";
+          });
+          const failedConnected = peers.some(
+            (peerObj) =>
+              peerObj.peer.connectionState === "faild" ||
+              peerObj.peer.connectionState === "disconnected"
+          );
+          const closedConnected = peers.some(
+            (peerObj) => peerObj.peer.connectionState === "closed"
+          );
+          if (closedConnected) {
+            closedConnections++;
+          }
+
+          if (failedConnected) {
+            setConnectionFailedReason("failed");
+            setFireCheckState(false);
+            setLoading(false);
+            return;
+          } else if (closedConnections === CONNECTION_CLOSED_THRESHOLD) {
+            setConnectionFailedReason("closed");
+            setFireCheckState(false);
+            setLoading(false);
+            return;
+          } else if (!allConnected) {
+            setTimeout(() => {
+              // Recall the function after a short delay
+              checkConnectionStates();
+            }, 1000); // Adjust the delay as needed
+          } else {
+            setLoading(false);
+            setFireCheckState(false);
+          }
+        }
+        retryConnections++;
+      };
+
+      // Call the function initially
+
+      checkConnectionStates();
     }
-  }, [peers]);
+  }, [fireCheckState, peers]);
 
   return (
     <>
+      <Modal
+        open={connectionFailedReason}
+        okText={"Reload"}
+        cancelText={"ignore"}
+        onOk={() => {
+          window.location.reload();
+        }}
+        onCancel={() => {
+          setConnectionFailedReason(undefined);
+        }}
+      >
+        your connection is {connectionFailedReason}
+      </Modal>
       <SettingsModal
         adminMuteAll={adminMuteAll}
         adminStopCamAll={adminStopCamAll}
