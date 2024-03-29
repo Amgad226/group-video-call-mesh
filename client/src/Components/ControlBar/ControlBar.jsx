@@ -62,10 +62,18 @@ function ControlBar({
       socketRef.current.emit("toggle-voice", { voice_bool: false });
       dataChannelsRef.current.forEach(({ dataChannel }) => {
         if (dataChannel.readyState == "open") {
+          console.log({
+            type: "voice-toggle",
+            data: {
+              id: socketRef.current.id,
+              voice_bool: false,
+            },
+          });
           dataChannel.send(
             JSON.stringify({
               type: "voice-toggle",
               data: {
+                id: socketRef.current.id,
                 voice_bool: false,
               },
             })
@@ -77,12 +85,20 @@ function ControlBar({
         .forEach((track) => (track.enabled = false));
     } else if (unMute && clientStreamRef.current) {
       socketRef.current.emit("toggle-voice", { voice_bool: true });
-      dataChannelsRef.current.forEach(({ dataChannel }) => {
+      dataChannelsRef.current.forEach(({ id, dataChannel }) => {
         if (dataChannel.readyState == "open") {
+          console.log({
+            type: "voice-toggle",
+            data: {
+              id: socketRef.current.id,
+              voice_bool: true,
+            },
+          });
           dataChannel.send(
             JSON.stringify({
               type: "voice-toggle",
               data: {
+                id: socketRef.current.id,
                 voice_bool: true,
               },
             })
@@ -112,12 +128,13 @@ function ControlBar({
   useEffect(() => {
     if (!video && clientStreamRef.current) {
       socketRef.current.emit("toggle-video", { video_bool: false });
-      dataChannelsRef.current.forEach(({ dataChannel }) => {
+      dataChannelsRef.current.forEach(({ id, dataChannel }) => {
         if (dataChannel.readyState == "open") {
           dataChannel.send(
             JSON.stringify({
               type: "video-toggle",
               data: {
+                id,
                 video_bool: false,
               },
             })
@@ -129,12 +146,13 @@ function ControlBar({
         .forEach((track) => (track.enabled = false));
     } else if (video && clientStreamRef.current) {
       socketRef.current.emit("toggle-video", { video_bool: true });
-      dataChannelsRef.current.forEach(({ dataChannel }) => {
+      dataChannelsRef.current.forEach(({ id, dataChannel }) => {
         if (dataChannel.readyState == "open") {
           dataChannel.send(
             JSON.stringify({
               type: "video-toggle",
               data: {
+                id,
                 video_bool: true,
               },
             })

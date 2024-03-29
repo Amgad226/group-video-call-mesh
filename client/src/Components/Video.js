@@ -251,6 +251,7 @@ const Video = ({
   };
 
   const receiveChannelCallback = function (event) {
+    console.log("recive channel callback", event.channel);
     const Receive_dataChannel = event.channel;
     dataChannelsRef.current.push({ id, dataChannel: Receive_dataChannel });
     setDataChannelCreated(true);
