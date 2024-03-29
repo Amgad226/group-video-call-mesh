@@ -62,13 +62,6 @@ function ControlBar({
       socketRef.current.emit("toggle-voice", { voice_bool: false });
       dataChannelsRef.current.forEach(({ dataChannel }) => {
         if (dataChannel.readyState == "open") {
-          console.log({
-            type: "voice-toggle",
-            data: {
-              id: socketRef.current.id,
-              voice_bool: false,
-            },
-          });
           dataChannel.send(
             JSON.stringify({
               type: "voice-toggle",
@@ -87,13 +80,6 @@ function ControlBar({
       socketRef.current.emit("toggle-voice", { voice_bool: true });
       dataChannelsRef.current.forEach(({ id, dataChannel }) => {
         if (dataChannel.readyState == "open") {
-          console.log({
-            type: "voice-toggle",
-            data: {
-              id: socketRef.current.id,
-              voice_bool: true,
-            },
-          });
           dataChannel.send(
             JSON.stringify({
               type: "voice-toggle",

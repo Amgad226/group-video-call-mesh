@@ -68,7 +68,7 @@ const Room = () => {
     } else {
       baseUrl = "http://localhost:3001";
     }
-    baseUrl = "https://yorkbritishacademy.net/";
+    // baseUrl = "https://yorkbritishacademy.net/";
 
     socketRef.current = io.connect(baseUrl);
 
@@ -145,6 +145,29 @@ const Room = () => {
   useEffect(() => {
     ByForce();
     return () => {
+      clientStreamRef.current?.getTracks()?.forEach((track) => {
+        track.stop();
+      });
+      if (shareScreenStreamRef.current) {
+        shareScreenStreamRef.current?.getTracks()?.forEach((track) => {
+          track.stop();
+        });
+      }
+      if (newTrackForLocalShareScreenRef.current) {
+        newTrackForLocalShareScreenRef.current
+          ?.getTracks()
+          ?.forEach((track) => {
+            track.stop();
+          });
+      }
+      if (newTrackForLocalShareScreenRef.current) {
+        console.log("emit");
+        socketRef.current.emit("remove-stream", {
+          callerID: socketRef.current.id,
+          streamID: newTrackForLocalShareScreenRef.current.id,
+        });
+        socketRef.current.emit("stop-share-screen");
+      }
       socketRef.current.disconnect();
     };
   }, []);
@@ -413,33 +436,7 @@ const Room = () => {
     return Send_dataChannel;
   }
 
-  useEffect(() => {
-    return () => {
-      clientStreamRef.current?.getTracks()?.forEach((track) => {
-        track.stop();
-      });
-      if (shareScreenStreamRef.current) {
-        shareScreenStreamRef.current?.getTracks()?.forEach((track) => {
-          track.stop();
-        });
-      }
-      if (newTrackForLocalShareScreenRef.current) {
-        newTrackForLocalShareScreenRef.current
-          ?.getTracks()
-          ?.forEach((track) => {
-            track.stop();
-          });
-      }
-      // if (shareScreenMode.owner && shareScreenMode.streamId) {
-      //   console.log("emit");
-      //   socketRef.current.emit("remove-stream", {
-      //     callerID: socketRef.current.id,
-      //     streamID: newTrackForLocalShareScreenRef.current.id,
-      //   });
-      //   socketRef.current.emit("stop-share-screen");
-      // }
-    };
-  }, []);
+
 
   useEffect(() => {
     console.log(connectedPeer);
