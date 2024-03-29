@@ -506,6 +506,7 @@ const Room = () => {
             {shareScreenMode.streamId && (
               <Col xs={24}>
                 <ShareScreen
+                  owner={shareScreenMode.owner}
                   streamRef={
                     newTrackForRemoteShareScreenRef.current
                       ? newTrackForRemoteShareScreenRef

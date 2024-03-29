@@ -1,9 +1,10 @@
 import React from "react";
 import styles from "./styles.module.css";
-function ShareScreen({ streamRef }) {
+function ShareScreen({ streamRef, owner }) {
   return (
     <div className={styles.shareScreenContainer}>
       <video
+        muted={owner}
         controls
         ref={(videoRef) => {
           if (videoRef && streamRef.current) {
