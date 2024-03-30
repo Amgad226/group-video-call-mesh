@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Switch } from "react-router-dom";
 import CreateRoom from "./routes/CreateRoom";
 import Room from "./routes/Room";
 import { ConfigProvider } from "antd";
+import NetworkProvider from "./NetworkProvider";
 
 function App() {
   return (
@@ -16,8 +17,10 @@ function App() {
             },
           }}
         >
-          <Route path="/" exact component={CreateRoom} />
-          <Route path="/room/:roomID/:userName" component={Room} />
+          <NetworkProvider>
+            <Route path="/" exact component={CreateRoom} />
+            <Route path="/room/:roomID/:userName" component={Room} />
+          </NetworkProvider>
         </ConfigProvider>
       </Switch>
     </BrowserRouter>
