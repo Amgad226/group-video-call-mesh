@@ -381,6 +381,7 @@ const Room = () => {
         };
       })
     );
+    setConnectedPeers({ failedUser: [""], length: connectedPeersRef.current });
     console.log("user leave", userID);
     console.log("removedPeer", removedPeer);
     console.log("newPeers", newPeers);
@@ -435,8 +436,6 @@ const Room = () => {
 
     return Send_dataChannel;
   }
-
-
 
   useEffect(() => {
     console.log(connectedPeer);
