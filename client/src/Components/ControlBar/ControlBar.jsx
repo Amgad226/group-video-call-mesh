@@ -316,6 +316,7 @@ function ControlBar({
         activeAudioDevice={activeAudioDevice}
         setActiveAudioDevice={setActiveAudioDevice}
         clientStreamRef={clientStreamRef}
+        shareScreenStreamRef={shareScreenStreamRef}
         userVideo={userVideo}
         peers={peers}
         setHasMultipleDevices={setHasMultipleDevices}

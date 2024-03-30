@@ -19,6 +19,7 @@ const DeviceSelectionModal = ({
   peers,
   userVideo,
   clientStreamRef,
+  shareScreenStreamRef,
   forceMuted,
   forceVideoStoped,
 }) => {
@@ -65,8 +66,14 @@ const DeviceSelectionModal = ({
             ...newStream.getAudioTracks(),
           ]);
           newStream = merge;
-          userVideo.current.srcObject = newStream;
+          // userVideo.current.srcObject = newStream;
           clientStreamRef.current = newStream;
+          if (shareScreenStreamRef.current) {
+            shareScreenStreamRef.current = new MediaStream([
+              ...shareScreenStreamRef.current.getVideoTracks(),
+              ...newStream.getAudioTracks(),
+            ]);
+          }
           setActiveAudioDevice(deviceId);
 
           peers?.forEach((peerObj) => {
