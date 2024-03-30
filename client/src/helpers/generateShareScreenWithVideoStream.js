@@ -33,5 +33,20 @@ export async function generateShareScreenWithVideoStream() {
     mask: "circle",
   });
 
-  return mediaStreamComposer.getResultStream();
+  const resultStream = mediaStreamComposer.getResultStream();
+  const videoTrack = resultStream.getVideoTracks()[0];
+
+  const shareScreenTrack = screencast.getVideoTracks()[0];
+
+  shareScreenTrack.onended = () => {
+    const event = new Event("force-end");
+    videoTrack.dispatchEvent(event);
+  };
+
+  videoTrack.addEventListener("force-end", () => {
+    console.log("force-end");
+    screencast.getTracks().forEach((track) => track.stop());
+  });
+
+  return resultStream;
 }
