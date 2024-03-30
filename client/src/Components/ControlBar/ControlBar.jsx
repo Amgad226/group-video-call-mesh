@@ -21,6 +21,7 @@ import { createFakeVideoTrack } from "../../helpers/createFakeVideoTrack";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import DeviceSelectionModal from "../DeviceSelectionModal/DeviceSelectionModal";
 import styles from "./styles.module.scss";
+import { generateShareScreenWithVideoStream } from "../../helpers/generateShareScreenWithVideoStream";
 function ControlBar({
   setShareScreenMode,
   newTrackForLocalShareScreenRef,
@@ -180,32 +181,38 @@ function ControlBar({
       shareScreenStreamRef.current = undefined;
     }
     if (!screenSharing) {
-      navigator.mediaDevices
-        .getDisplayMedia({
-          audio: true,
-          video: true,
-        })
+      generateShareScreenWithVideoStream()
         .then((shareStreem) => {
-          const shareStreemAudioTrack = shareStreem.getAudioTracks()[0];
-
-          if (shareStreemAudioTrack) {
-            shareStreem.removeTrack(shareStreemAudioTrack);
-          } else {
-            shareStreem.addTrack(clientStreamRef.current.getAudioTracks()[0]);
-          }
+          console.log(shareStreem);
+          // if (shareStreemAudioTrack) {
+          //   shareStreem.removeTrack(shareStreemAudioTrack);
+          // } else {
+          //   shareStreem.addTrack(clientStreamRef.current.getAudioTracks()[0]);
+          // }
 
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
+          const shareStreemAudioTrack = shareStreem.getAudioTracks()[0];
+
           peersRef?.current?.forEach((peerObj) => {
             const coneectionState = peerObj.peer.connectionState;
-
             if (checkConnectionState(coneectionState)) {
-              const sender = peerObj.peer
+              const videoSender = peerObj.peer
                 .getSenders()
                 .find((s) => s?.track?.kind === "video");
 
-              console.log("audio", shareStreemAudioTrack);
-              if (sender) {
-                sender.replaceTrack(screenSharingTrack);
+              console.log("video", screenSharingTrack);
+              if (videoSender) {
+                videoSender.replaceTrack(screenSharingTrack);
+              }
+              if (shareStreemAudioTrack) {
+                const audioSender = peerObj.peer
+                  .getSenders()
+                  .find((s) => s?.track?.kind === "audio");
+
+                console.log("audio", shareStreemAudioTrack);
+                if (audioSender) {
+                  audioSender.replaceTrack(shareStreemAudioTrack);
+                }
               }
             }
           });
