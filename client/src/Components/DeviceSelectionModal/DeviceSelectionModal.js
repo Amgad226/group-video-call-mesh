@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faMicrophone,
   faMicrophoneLines,
-  faVideo,
+  faVideo
 } from "@fortawesome/free-solid-svg-icons";
-import { Button, Modal } from "antd";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Modal, notification } from "antd";
+import React, { useEffect, useState } from "react";
 import { checkConnectionState } from "../../helpers/checkConnectionState";
 import styles from "./styles.module.scss";
 const DeviceSelectionModal = ({
@@ -24,6 +23,7 @@ const DeviceSelectionModal = ({
   forceVideoStoped,
 }) => {
   const [devices, setDevices] = useState([]);
+  const [deviceChange, setDeviceChange] = useState(false);
 
   const handleDeviceSelect = (device) => {
     switchDevice(device.deviceId, device.kind);
@@ -125,6 +125,47 @@ const DeviceSelectionModal = ({
       return false;
     }
   };
+
+  useEffect(() => {
+    async function handleDeviceChange() {
+      navigator.mediaDevices.ondevicechange = async () => {
+        notification.open({
+          type: "warning",
+          message: "The devices list is change ",
+        });
+        const devices = await navigator.mediaDevices.enumerateDevices();
+
+        // Check if the ejected device is present in the updated device list
+        const isCurrentVideoDeviceEjected = devices
+          .filter((device) => device.kind === "videoinput")
+          .every(
+            (device) =>
+              device.deviceId !==
+              clientStreamRef.current?.getVideoTracks()[0].getSettings()
+                .deviceId
+          );
+
+        const isCurrentAudioDeviceEjected = devices
+          .filter((device) => device.kind === "audioinput")
+          .every(
+            (device) =>
+              device.deviceId !==
+              clientStreamRef.current?.getAudioTracks()[0].getSettings()
+                .deviceId
+          );
+        console.log(isCurrentVideoDeviceEjected);
+        console.log(isCurrentAudioDeviceEjected);
+
+        if (isCurrentVideoDeviceEjected || isCurrentAudioDeviceEjected) {
+          // Ejected device detected, handle switching to another device input
+          setShowModal(true);
+        }
+        setDeviceChange(Math.random());
+      };
+    }
+    handleDeviceChange();
+  }, []);
+
   useEffect(() => {
     const fetchDevices = async () => {
       try {
@@ -145,7 +186,7 @@ const DeviceSelectionModal = ({
       }
     };
     fetchDevices();
-  }, []);
+  }, [deviceChange]);
 
   useEffect(() => {
     checkMultiDevices()

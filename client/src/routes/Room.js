@@ -1,3 +1,4 @@
+import { Col, Modal, Row, Spin } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
@@ -10,13 +11,10 @@ import SettingsModal from "../Components/SettingsModal/SettingsModal";
 import ShareScreen from "../Components/ShareScreen";
 import Video from "../Components/Video";
 import { iceConfig } from "../config/iceConfig";
-import { checkConnectionState } from "../helpers/checkConnectionState";
 import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { getUserAgent } from "../helpers/getUserAgent";
 import styles from "./styles.module.scss";
-import { Col, Modal, Row, Spin } from "antd";
-import { checkAllPeersConnectionState } from "../helpers/chcekAllPeersConnectionState";
 
 const Room = () => {
   const socketRef = useRef();
@@ -144,6 +142,7 @@ const Room = () => {
 
   useEffect(() => {
     ByForce();
+
     return () => {
       clientStreamRef.current?.getTracks()?.forEach((track) => {
         track.stop();
