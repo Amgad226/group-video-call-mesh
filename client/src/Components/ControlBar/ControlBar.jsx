@@ -181,17 +181,17 @@ function ControlBar({
       shareScreenStreamRef.current = undefined;
     }
     if (!screenSharing) {
-      generateShareScreenWithVideoStream()
+      navigator.mediaDevices
+        .getDisplayMedia({
+          audio: false,
+          video: true,
+        })
         .then((shareStreem) => {
           console.log(shareStreem);
-          // if (shareStreemAudioTrack) {
-          //   shareStreem.removeTrack(shareStreemAudioTrack);
-          // } else {
-          //   shareStreem.addTrack(clientStreamRef.current.getAudioTracks()[0]);
-          // }
 
           const screenSharingTrack = shareStreem.getVideoTracks()[0];
-          const shareStreemAudioTrack = shareStreem.getAudioTracks()[0];
+
+          shareStreem.addTrack(clientStreamRef.current.getAudioTracks()[0]);
 
           peersRef?.current?.forEach((peerObj) => {
             const coneectionState = peerObj.peer.connectionState;
@@ -203,16 +203,6 @@ function ControlBar({
               console.log("video", screenSharingTrack);
               if (videoSender) {
                 videoSender.replaceTrack(screenSharingTrack);
-              }
-              if (shareStreemAudioTrack) {
-                const audioSender = peerObj.peer
-                  .getSenders()
-                  .find((s) => s?.track?.kind === "audio");
-
-                console.log("audio", shareStreemAudioTrack);
-                if (audioSender) {
-                  audioSender.replaceTrack(shareStreemAudioTrack);
-                }
               }
             }
           });
