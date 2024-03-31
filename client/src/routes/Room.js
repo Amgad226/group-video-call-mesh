@@ -1,4 +1,4 @@
-import { Col, Modal, Row, Spin } from "antd";
+import { Button, Col, Modal, Row, Spin } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
@@ -15,8 +15,13 @@ import { createFakeVideoTrack } from "../helpers/createFakeVideoTrack";
 import { getAvaliableUserMedia } from "../helpers/getAvaliableUserMedia";
 import { getUserAgent } from "../helpers/getUserAgent";
 import styles from "./styles.module.scss";
+import userJoinsound from "../assets/sounds/user_joined.mp3";
+import userLeavesound from "../assets/sounds/user_leave.mp3";
 
 const Room = () => {
+  const userJoinSoundRef = useRef(new Audio(userJoinsound));
+  const userLeaveSoundRef = useRef(new Audio(userLeavesound));
+
   const socketRef = useRef();
   const userVideo = useRef();
   const clientStreamRef = useRef();
@@ -203,6 +208,8 @@ const Room = () => {
       peer = existingPeerObj.peer;
     } else {
       peer = createPeer(incoming.callerID, false);
+      userJoinSoundRef.current.volume = 0.4;
+      userJoinSoundRef.current.play();
     }
     const desc = new RTCSessionDescription(incoming.signal);
     peer
@@ -381,6 +388,7 @@ const Room = () => {
       })
     );
     setConnectedPeers({ failedUser: [""], length: connectedPeersRef.current });
+    userLeaveSoundRef.current.play();
     console.log("user leave", userID);
     console.log("removedPeer", removedPeer);
     console.log("newPeers", newPeers);
