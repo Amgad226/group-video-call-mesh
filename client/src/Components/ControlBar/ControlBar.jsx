@@ -21,7 +21,6 @@ import { createFakeVideoTrack } from "../../helpers/createFakeVideoTrack";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import DeviceSelectionModal from "../DeviceSelectionModal/DeviceSelectionModal";
 import styles from "./styles.module.scss";
-import { generateShareScreenWithVideoStream } from "../../helpers/generateShareScreenWithVideoStream";
 function ControlBar({
   setShareScreenMode,
   newTrackForLocalShareScreenRef,
@@ -38,6 +37,7 @@ function ControlBar({
   peersRef,
   userVideo,
   videoDeviceNotExist,
+  setVideoDeviceNotExist,
   iAdmin,
   unMute,
   setUnMute,
@@ -309,6 +309,9 @@ function ControlBar({
   return (
     <>
       <DeviceSelectionModal
+        setVideo={setVideo}
+        videoDeviceNotExist={videoDeviceNotExist}
+        setVideoDeviceNotExist={setVideoDeviceNotExist}
         showModal={showModal}
         setShowModal={setShowModal}
         activeVideoDevice={activeVideoDevice}

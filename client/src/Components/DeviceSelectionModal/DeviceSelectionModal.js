@@ -1,7 +1,4 @@
-import {
-  faMicrophoneLines,
-  faVideo
-} from "@fortawesome/free-solid-svg-icons";
+import { faMicrophoneLines, faVideo } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Modal, notification } from "antd";
 import React, { useEffect, useState } from "react";
@@ -21,6 +18,9 @@ const DeviceSelectionModal = ({
   shareScreenStreamRef,
   forceMuted,
   forceVideoStoped,
+  setVideo,
+  setVideoDeviceNotExist,
+  videoDeviceNotExist,
 }) => {
   const [devices, setDevices] = useState([]);
   const [deviceChange, setDeviceChange] = useState(false);
@@ -128,43 +128,66 @@ const DeviceSelectionModal = ({
 
   useEffect(() => {
     async function handleDeviceChange() {
-      navigator.mediaDevices.ondevicechange = async () => {
+      navigator.mediaDevices.addEventListener("devicechange", async () => {
         notification.open({
           type: "warning",
           message: "The devices list is change ",
         });
         const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(
+          (device) => device.kind === "videoinput"
+        );
+        const audioDevices = devices.filter(
+          (device) => device.kind === "audioinput"
+        );
 
         // Check if the ejected device is present in the updated device list
-        const isCurrentVideoDeviceEjected = devices
-          .filter((device) => device.kind === "videoinput")
-          .every(
-            (device) =>
-              device.deviceId !==
-              clientStreamRef.current?.getVideoTracks()[0].getSettings()
-                .deviceId
-          );
+        const isCurrentVideoDeviceEjected = videoDevices.every(
+          (device) =>
+            device.deviceId !==
+            clientStreamRef.current?.getVideoTracks()[0].getSettings().deviceId
+        );
 
-        const isCurrentAudioDeviceEjected = devices
-          .filter((device) => device.kind === "audioinput")
-          .every(
-            (device) =>
-              device.deviceId !==
-              clientStreamRef.current?.getAudioTracks()[0].getSettings()
-                .deviceId
-          );
+        const isCurrentAudioDeviceEjected = audioDevices.every(
+          (device) =>
+            device.deviceId !==
+            clientStreamRef.current?.getAudioTracks()[0].getSettings().deviceId
+        );
         console.log(isCurrentVideoDeviceEjected);
         console.log(isCurrentAudioDeviceEjected);
 
-        if (isCurrentVideoDeviceEjected || isCurrentAudioDeviceEjected) {
+        if (
+          (isCurrentVideoDeviceEjected && videoDevices.length > 0) ||
+          (isCurrentAudioDeviceEjected && audioDevices.length > 0)
+        ) {
           // Ejected device detected, handle switching to another device input
           setShowModal(true);
         }
+
+        if (isCurrentVideoDeviceEjected && videoDevices.length === 0) {
+          setVideo(false);
+          setVideoDeviceNotExist(true);
+          setActiveVideoDevice(undefined);
+        }
+
+        // if (audioDevices.length > 0 && isCurrentAudioDeviceEjected) {
+        //   switchDevice(audioDevices[0].deviceId, audioDevices[0].kind);
+        // }
+
+        if (videoDevices.length > 0 && videoDeviceNotExist) {
+          setVideoDeviceNotExist(false);
+          switchDevice(videoDevices[0].deviceId, videoDevices[0].kind);
+        }
+
         setDeviceChange(Math.random());
-      };
+      });
     }
     handleDeviceChange();
-  }, []);
+
+    return () => {
+      navigator.mediaDevices.removeEventListener("devicechange", () => {});
+    };
+  }, [videoDeviceNotExist]);
 
   useEffect(() => {
     const fetchDevices = async () => {

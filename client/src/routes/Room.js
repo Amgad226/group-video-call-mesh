@@ -569,6 +569,7 @@ const Room = () => {
             })}
           </Row>
           <ControlBar
+            setVideoDeviceNotExist={setVideoDeviceNotExist}
             peersRef={peersRef}
             setShareScreenMode={setShareScreenMode}
             newTrackForLocalShareScreenRef={newTrackForLocalShareScreenRef}
