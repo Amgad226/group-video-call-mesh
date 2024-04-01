@@ -170,9 +170,10 @@ const DeviceSelectionModal = ({
           setActiveVideoDevice(undefined);
         }
 
-        // if (audioDevices.length > 0 && isCurrentAudioDeviceEjected) {
-        //   switchDevice(audioDevices[0].deviceId, audioDevices[0].kind);
-        // }
+        if (audioDevices.length > 0 && isCurrentAudioDeviceEjected) {
+          setActiveAudioDevice(undefined);
+          // switchDevice(audioDevices[0].deviceId, audioDevices[0].kind);
+        }
 
         if (videoDevices.length > 0 && videoDeviceNotExist) {
           setVideoDeviceNotExist(false);
