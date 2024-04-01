@@ -71,7 +71,7 @@ const Room = () => {
     } else {
       baseUrl = "http://localhost:3001";
     }
-    // baseUrl = "https://yorkbritishacademy.net/";
+    baseUrl = "https://yorkbritishacademy.net/";
 
     socketRef.current = io.connect(baseUrl);
 
