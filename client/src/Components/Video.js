@@ -45,6 +45,7 @@ const Video = ({
     peerObj.peer.onconnectionstatechange = (e) => {
       console.log("connectionState", e.target.connectionState, id);
       if (e.target.connectionState === "connected") {
+        retryCount = 0;
         setConnectedPeer(true);
         connectedPeersRef.current = connectedPeersRef.current + 1;
         setConnectedPeers({

@@ -73,7 +73,11 @@ const Room = () => {
     }
     baseUrl = "https://yorkbritishacademy.net/";
 
-    socketRef.current = io.connect(baseUrl);
+    socketRef.current = io.connect(baseUrl, {
+      reconnectionDelay: 3000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+    });
 
     getAvaliableUserMedia()
       .then((stream) => {
@@ -199,6 +203,7 @@ const Room = () => {
   }
 
   function handleRecieveCall(incoming) {
+    console.log("offer");
     let peer;
     const existingPeerObj = peersRef.current.find(
       (peerRef) => peerRef.peerID === incoming.callerID
@@ -286,6 +291,7 @@ const Room = () => {
   }
 
   function handleAnswer(message) {
+    console.log("answer");
     const desc = new RTCSessionDescription(message.signal);
     const item = peersRef.current.find(
       (peerRef) => peerRef.peerID === message.id
