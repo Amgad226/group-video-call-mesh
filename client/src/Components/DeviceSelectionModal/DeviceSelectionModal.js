@@ -18,6 +18,9 @@ const DeviceSelectionModal = ({
   shareScreenStreamRef,
   forceMuted,
   forceVideoStoped,
+  mute,
+  setMute,
+  video,
   setVideo,
   setVideoDeviceNotExist,
   videoDeviceNotExist,
@@ -75,6 +78,10 @@ const DeviceSelectionModal = ({
             ]);
           }
           setActiveAudioDevice(deviceId);
+
+          if (mute) {
+            clientStreamRef.current.getAudioTracks()[0].enabled = false;
+          }
 
           peers?.forEach((peerObj) => {
             const coneectionState = peerObj.peer.connectionState;
@@ -153,8 +160,8 @@ const DeviceSelectionModal = ({
             device.deviceId !==
             clientStreamRef.current?.getAudioTracks()[0].getSettings().deviceId
         );
-        console.log(isCurrentVideoDeviceEjected);
-        console.log(isCurrentAudioDeviceEjected);
+        console.log("video", isCurrentVideoDeviceEjected);
+        console.log("audio", isCurrentAudioDeviceEjected);
 
         if (
           (isCurrentVideoDeviceEjected && videoDevices.length > 0) ||
@@ -164,20 +171,35 @@ const DeviceSelectionModal = ({
           setShowModal(true);
         }
 
-        if (isCurrentVideoDeviceEjected && videoDevices.length === 0) {
+        if (
+          isCurrentVideoDeviceEjected &&
+          videoDevices.length === 0 &&
+          !videoDeviceNotExist
+        ) {
           setVideo(false);
           setVideoDeviceNotExist(true);
           setActiveVideoDevice(undefined);
         }
 
-        if (audioDevices.length > 0 && isCurrentAudioDeviceEjected) {
-          setActiveAudioDevice(undefined);
-          // switchDevice(audioDevices[0].deviceId, audioDevices[0].kind);
-        }
-
         if (videoDevices.length > 0 && videoDeviceNotExist) {
           setVideoDeviceNotExist(false);
           switchDevice(videoDevices[0].deviceId, videoDevices[0].kind);
+        }
+
+        if (audioDevices.length > 0) {
+          if (isCurrentAudioDeviceEjected) {
+            setActiveAudioDevice(undefined);
+            switchDevice(audioDevices[0].deviceId, audioDevices[0].kind);
+          } else {
+            const currnetAudioDevice = audioDevices.find(
+              (device) =>
+                device.deviceId ===
+                clientStreamRef.current?.getAudioTracks()[0].getSettings()
+                  .deviceId
+            );
+            console.log(currnetAudioDevice);
+            switchDevice(currnetAudioDevice.deviceId, currnetAudioDevice.kind);
+          }
         }
 
         setDeviceChange(Math.random());
@@ -188,7 +210,7 @@ const DeviceSelectionModal = ({
     return () => {
       navigator.mediaDevices.removeEventListener("devicechange", () => {});
     };
-  }, [videoDeviceNotExist]);
+  }, [videoDeviceNotExist, peers, mute]);
 
   useEffect(() => {
     const fetchDevices = async () => {

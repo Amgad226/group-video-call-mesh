@@ -225,19 +225,26 @@ function ControlBar({
 
   const endShareScreen = () => {
     const clientStreamVideo = clientStreamRef.current.getVideoTracks()[0];
+    const clientStreamAudio = clientStreamRef.current.getAudioTracks()[0];
 
     peersRef?.current?.forEach((peerObj) => {
       const coneectionState = peerObj.peer.connectionState;
-
       if (checkConnectionState(coneectionState)) {
-        const sender = peerObj.peer
+        const senderVideo = peerObj.peer
           .getSenders()
           .find((s) => s.track?.kind === "video");
         if (clientStreamVideo) {
-          sender.replaceTrack(clientStreamVideo);
+          senderVideo.replaceTrack(clientStreamVideo);
         } else {
           const fakeVideoTrack = createFakeVideoTrack();
-          sender.replaceTrack(fakeVideoTrack);
+          senderVideo.replaceTrack(fakeVideoTrack);
+        }
+
+        const senderAudio = peerObj.peer
+          .getSenders()
+          .find((s) => s.track?.kind === "audio");
+        if (clientStreamAudio) {
+          senderAudio.replaceTrack(clientStreamAudio);
         }
       }
     });
@@ -325,6 +332,7 @@ function ControlBar({
         setHasMultipleDevices={setHasMultipleDevices}
         forceVideoStoped={forceVideoStoped}
         forceMuted={forceMuted}
+        mute={!unMute}
       />
       <Row justify={"space-between"} className={styles.controlBar}>
         <Col
