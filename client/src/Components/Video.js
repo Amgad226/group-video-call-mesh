@@ -56,24 +56,24 @@ const Video = ({
         e.target.connectionState === "failed" ||
         e.target.connectionState === "disconnected"
       ) {
-        if (retryCount < 3) {
-          setConnectedPeer(false);
-          console.log(retryCount);
-          peerObj.peer.restartIce();
-          retryCount++;
-        } else {
-          const newPeers = peersRef.current.filter(
-            (peerObj) => peerObj.peerID !== id
-          );
-          peersRef.current = newPeers;
-          setPeers([...peersRef.current]);
-          setConnectedPeers(({ failedUser }) => {
-            return {
-              length: -1,
-              failedUser: [...failedUser, peerObj.userName],
-            };
-          });
-        }
+        // if (retryCount < 3) {
+        //   setConnectedPeer(false);
+        //   console.log(retryCount);
+        //   peerObj.peer.restartIce();
+        //   retryCount++;
+        // } else {
+        const newPeers = peersRef.current.filter(
+          (peerObj) => peerObj.peerID !== id
+        );
+        peersRef.current = newPeers;
+        setPeers([...peersRef.current]);
+        setConnectedPeers(({ failedUser }) => {
+          return {
+            length: -1,
+            failedUser: [...failedUser, peerObj.userName],
+          };
+        });
+        // }
       }
     };
   }, [shareScreenStreamId]);
