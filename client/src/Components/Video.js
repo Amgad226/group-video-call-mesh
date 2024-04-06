@@ -56,12 +56,12 @@ const Video = ({
         e.target.connectionState === "failed" ||
         e.target.connectionState === "disconnected"
       ) {
-        // if (retryCount < 3) {
-        //   setConnectedPeer(false);
-        //   console.log(retryCount);
-        //   peerObj.peer.restartIce();
-        //   retryCount++;
-        // } else {
+        if (retryCount < 3) {
+          setConnectedPeer(false);
+          console.log(retryCount);
+          peerObj.peer.restartIce();
+          retryCount++;
+        } else {
         const newPeers = peersRef.current.filter(
           (peerObj) => peerObj.peerID !== id
         );
@@ -73,7 +73,7 @@ const Video = ({
             failedUser: [...failedUser, peerObj.userName],
           };
         });
-        // }
+        }
       }
     };
   }, [shareScreenStreamId]);
