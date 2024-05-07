@@ -8,9 +8,9 @@ variables:
 
 build_backend:
   stage: build_backend
-  image: docker:19.03.12
+  image: docker:20.10.17
   services:
-    - docker:19.03.12-dind
+    - docker:20.10.17-dind
   script:
     - docker build -t $DOCKER_HUB_REPO/$BACKEND_IMAGE_NAME .
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
